@@ -1,0 +1,44 @@
+version: '3'
+services:
+  kafka-0:
+    image: vepo/kafka:3.7.0
+    container_name: kafka-0
+    ports:
+     - 9092:9092
+     - 9093:9093
+    environment:
+      KAFKA_CLUSTER_ID: N0UOwvnVR7ORiwq0M4do9w
+      KAFKA_BROKER_ID: 1
+      KAFKA_NODE_ID: 1
+      KAFKA_NUM_PARTITIONS: 8
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://kafka-0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-0:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-0:9093,2@kafka-1:9095,3@kafka-2:9097
+  kafka-1:
+    image: vepo/kafka:3.7.0
+    container_name: kafka-1
+    ports:
+     - 9094:9094
+     - 9095:9095
+    environment:
+      KAFKA_CLUSTER_ID: N0UOwvnVR7ORiwq0M4do9w
+      KAFKA_BROKER_ID: 2
+      KAFKA_NODE_ID: 2
+      KAFKA_NUM_PARTITIONS: 8
+      KAFKA_LISTENERS: PLAINTEXT://:9094,CONTROLLER://kafka-1:9095
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9094
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-0:9093,2@kafka-1:9095,3@kafka-2:9097
+  kafka-2:
+    image: vepo/kafka:3.7.0
+    container_name: kafka-2
+    ports:
+     - 9096:9096
+     - 9097:9097
+    environment:
+      KAFKA_CLUSTER_ID: N0UOwvnVR7ORiwq0M4do9w
+      KAFKA_BROKER_ID: 3
+      KAFKA_NODE_ID: 3
+      KAFKA_NUM_PARTITIONS: 8
+      KAFKA_LISTENERS: PLAINTEXT://:9096,CONTROLLER://kafka-2:9097
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9096
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-0:9093,2@kafka-1:9095,3@kafka-2:9097
