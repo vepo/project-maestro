@@ -1,43 +1,69 @@
 package io.vepo.maestro.kafka.manager;
 
+import java.util.List;
+import java.util.Optional;
+
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+
+import io.vepo.maestro.kafka.manager.components.MaestroScreen;
+import io.vepo.maestro.kafka.manager.components.SessionService;
+import io.vepo.maestro.kafka.manager.model.Cluster;
+import jakarta.inject.Inject;
 
 /**
  * The main view contains a button and a click listener.
  */
 @Route("")
-public class MainView extends VerticalLayout {
+public class MainView extends MaestroScreen {
 
-    public MainView() {
-        // Create a ComboBox for selecting a Kafka cluster
-        ComboBox<String> kafkaClusterComboBox = new ComboBox<>("Select Kafka Cluster");
-        kafkaClusterComboBox.setItems("Cluster 1", "Cluster 2", "Cluster 3"); // Example items
+    @Inject
+    SessionService sessionService;
 
-        // Create a Button to navigate to the Kafka cluster editor view
-        Button editClusterButton = new Button("Edit Kafka Cluster");
-
-        // Add event listener to the ComboBox
-        kafkaClusterComboBox.addValueChangeListener(event -> {
-            String selectedCluster = event.getValue();
-            if (selectedCluster != null) {
-                // Handle the selection of a Kafka cluster
-                // For example, you can display the selected cluster or perform other actions
-                System.out.println("Selected Kafka Cluster: " + selectedCluster);
-                getUI().ifPresent(ui -> ui.navigate("/kafka/" + selectedCluster));
-            }
-        });
-
-        // Add event listener to the Button
-        editClusterButton.addClickListener(event -> {
-            // Navigate to the Kafka cluster editor view
-            getUI().ifPresent(ui -> ui.navigate("/kafka"));
-        });
-
-        // Add components to the layout
-        add(kafkaClusterComboBox, editClusterButton);
-
+    @Override
+    protected String getTitle() {
+        return "";
     }
+
+    @Override
+    protected Component buildContent() {
+        var content = new VerticalLayout();
+        // Escolher Cluster
+        List<Cluster> allClusters = Cluster.findAll().list();
+        if (!allClusters.isEmpty()) {
+            var clusterComboBox = new ComboBox<Cluster>("Escolher Cluster");
+            clusterComboBox.setItemLabelGenerator(c -> c.name);
+            clusterComboBox.setItems(allClusters);
+            clusterComboBox.setPlaceholder("Selecione um cluster");
+            Optional.ofNullable(sessionService.getClusterId())
+                    .ifPresent(clusterId -> clusterComboBox.setValue(allClusters.stream()
+                                                                                .filter(cluster -> cluster.id.equals(clusterId))
+                                                                                .findFirst()
+                                                                                .orElse(null)));
+            content.add(clusterComboBox);
+
+            // Lógica para acessar o monitoramento do cluster selecionado
+            var btnSelect = new Button("Selecionar", event -> clusterComboBox.getOptionalValue()
+                                                                             .ifPresentOrElse(cluster -> {
+                                                                                 getUI().ifPresent(ui -> ui.navigate("kafka/" + cluster));
+                                                                             }, () -> {
+                                                                                 Notification.show("Por favor, selecione um cluster");
+                                                                             }));
+            clusterComboBox.addValueChangeListener(event -> btnSelect.setEnabled(event.getValue() != null));
+            btnSelect.setEnabled(false);
+            content.add(btnSelect);
+
+        }
+        // Cadastrar Cluster
+        content.add(new Button("Cadastrar Novo Cluster", event -> {
+            // Navegar para a tela de cadastro de um novo cluster
+            getUI().ifPresent(ui -> ui.navigate("kafka"));
+        }));
+        return content;
+    }
+
 }
