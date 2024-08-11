@@ -49,7 +49,7 @@ public class MainView extends MaestroScreen {
             // Lógica para acessar o monitoramento do cluster selecionado
             var btnSelect = new Button("Selecionar", event -> clusterComboBox.getOptionalValue()
                                                                              .ifPresentOrElse(cluster -> {
-                                                                                 getUI().ifPresent(ui -> ui.navigate("kafka/" + cluster));
+                                                                                 getUI().ifPresent(ui -> ui.navigate("kafka/" + cluster.id));
                                                                              }, () -> {
                                                                                  Notification.show("Por favor, selecione um cluster");
                                                                              }));

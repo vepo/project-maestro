@@ -29,4 +29,10 @@ public class Cluster extends PanacheEntityBase {
         this.name = name;
         this.bootstrapServers = bootstrapServers;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Cluster [id=%d, name=%s, bootstrapServers=%s]", id, name, bootstrapServers);
+    }
+
 }

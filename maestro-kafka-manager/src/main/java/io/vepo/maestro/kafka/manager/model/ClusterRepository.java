@@ -1,5 +1,7 @@
 package io.vepo.maestro.kafka.manager.model;
 
+import java.util.List;
+
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.transaction.Transactional;
 
@@ -22,6 +24,10 @@ public class ClusterRepository {
     @Transactional
     public void delete(Long clusterId) {
         Cluster.deleteById(clusterId);
+    }
+
+    public List<Cluster> findAll() {
+        return Cluster.listAll();
     }
 
 }

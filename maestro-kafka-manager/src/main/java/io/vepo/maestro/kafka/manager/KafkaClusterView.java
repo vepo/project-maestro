@@ -9,10 +9,10 @@ import com.vaadin.flow.router.Route;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
 
-@Route("kafka/:clusterId")
+@Route("kafka/:clusterId([1-9][0-9]*)")
 public class KafkaClusterView extends MaestroScreen {
 
-    private List<String> fetchKafkaTopics(String clusterId) {
+    private List<String> fetchKafkaTopics(Long clusterId) {
         // Implement the logic to fetch Kafka topics based on the clusterId
         // This is a placeholder implementation
         return List.of("Topic1", "Topic2", "Topic3");
@@ -37,5 +37,4 @@ public class KafkaClusterView extends MaestroScreen {
             return new Grid<>();
         });
     }
-
 }
