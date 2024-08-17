@@ -1,1 +1,1 @@
-INSERT INTO cluster (id, name, bootstrapServers) VALUES (nextval('cluster_id_seq'), 'Kafka Local', 'localhost:9092');
+INSERT INTO cluster (id, name, bootstrapServers) VALUES (nextval('cluster_id_seq'), 'Main Cluster', 'kafka-0:9092, kafka-1:9094, kafka-2:9096');

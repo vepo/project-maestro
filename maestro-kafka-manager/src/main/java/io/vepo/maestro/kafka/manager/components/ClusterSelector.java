@@ -3,6 +3,7 @@ package io.vepo.maestro.kafka.manager.components;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.vepo.maestro.kafka.manager.model.Cluster;
 import jakarta.enterprise.context.SessionScoped;
 
 @SessionScoped
@@ -16,6 +17,10 @@ public class ClusterSelector {
 
     public Optional<Long> getSelected() {
         return Optional.of(selected.get()).filter(id -> id != -1);
+    }
+
+    public Optional<Cluster> getSelectedCluster() {
+        return getSelected().map(id -> Cluster.findById(id));
     }
 
 }

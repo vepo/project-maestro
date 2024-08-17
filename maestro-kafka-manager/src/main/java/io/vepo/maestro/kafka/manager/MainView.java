@@ -31,39 +31,7 @@ public class MainView extends MaestroScreen {
 
     @Override
     protected Component buildContent() {
-        var content = new VerticalLayout();
-        // Escolher Cluster
-        List<Cluster> allClusters = Cluster.findAll().list();
-        if (!allClusters.isEmpty()) {
-            var clusterComboBox = new ComboBox<Cluster>("Escolher Cluster");
-            clusterComboBox.setItemLabelGenerator(c -> c.name);
-            clusterComboBox.setItems(allClusters);
-            clusterComboBox.setPlaceholder("Selecione um cluster");
-            Optional.ofNullable(sessionService.getClusterId())
-                    .ifPresent(clusterId -> clusterComboBox.setValue(allClusters.stream()
-                                                                                .filter(cluster -> cluster.id.equals(clusterId))
-                                                                                .findFirst()
-                                                                                .orElse(null)));
-            content.add(clusterComboBox);
-
-            // Lógica para acessar o monitoramento do cluster selecionado
-            var btnSelect = new Button("Selecionar", event -> clusterComboBox.getOptionalValue()
-                                                                             .ifPresentOrElse(cluster -> {
-                                                                                 getUI().ifPresent(ui -> ui.navigate("kafka/" + cluster.id));
-                                                                             }, () -> {
-                                                                                 Notification.show("Por favor, selecione um cluster");
-                                                                             }));
-            clusterComboBox.addValueChangeListener(event -> btnSelect.setEnabled(event.getValue() != null));
-            btnSelect.setEnabled(false);
-            content.add(btnSelect);
-
-        }
-        // Cadastrar Cluster
-        content.add(new Button("Cadastrar Novo Cluster", event -> {
-            // Navegar para a tela de cadastro de um novo cluster
-            getUI().ifPresent(ui -> ui.navigate("kafka"));
-        }));
-        return content;
+        return new VerticalLayout();
     }
 
 }

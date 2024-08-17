@@ -24,3 +24,8 @@
     text-align: center;
     margin: auto 10px;
 }
+
+vaadin-text-field,
+vaadin-integer-field {
+    width: 100%;
+}
