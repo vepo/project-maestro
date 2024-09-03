@@ -58,5 +58,6 @@
 
   <modules>
     <module>maestro-kafka-manager</module>
+    <module>framework</module>
   </modules>
 </project>
