@@ -9,8 +9,8 @@ import com.vaadin.flow.router.Route;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
 
-@Route("kafka/:clusterId([1-9][0-9]*)")
-public class KafkaClusterView extends MaestroScreen {
+@Route("kafka/:clusterId([1-9][0-9]*)/consumers")
+public class KafkaConsumerView extends MaestroScreen {
 
     private List<String> fetchKafkaTopics(Long clusterId) {
         // Implement the logic to fetch Kafka topics based on the clusterId
