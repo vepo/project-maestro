@@ -8,7 +8,8 @@
 
     <logger name="com.github.dockerjava" level="WARN" />
     <logger name="org.testcontainers" level="WARN" />
-    <logger name="org.apache.activemq" level="WARN" />
+    <logger name="org.jboss.weld" level="WARN" />
+    <logger name="org.apache.kafka" level="WARN" />
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />

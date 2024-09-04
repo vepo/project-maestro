@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.apache.kafka.common.serialization.Deserializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 import io.vepo.maestro.framework.serializers.JsonDeserializer;
 
@@ -18,7 +19,7 @@ import io.vepo.maestro.framework.serializers.JsonDeserializer;
 public @interface MaestroConsumer {
     public static Class<? extends Deserializer> DEFAULT_DESERIALIZER = JsonDeserializer.class;
 
-    public Class<? extends Deserializer> keyDeserializer() default JsonDeserializer.class;
+    public Class<? extends Deserializer> keyDeserializer() default StringDeserializer.class;
 
     public Class<? extends Deserializer> valueDeserializer() default JsonDeserializer.class;
 }
