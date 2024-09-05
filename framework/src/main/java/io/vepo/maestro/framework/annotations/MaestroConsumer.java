@@ -1,4 +1,4 @@
-package io.vepo.maestro.framework;
+package io.vepo.maestro.framework.annotations;
 
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;

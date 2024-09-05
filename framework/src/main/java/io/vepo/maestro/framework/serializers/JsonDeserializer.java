@@ -1,5 +1,6 @@
 package io.vepo.maestro.framework.serializers;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -8,6 +9,8 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.Deserializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.vepo.maestro.framework.annotations.Topic;
 
 public class JsonDeserializer<T> implements Deserializer<T> {
     private ObjectMapper mapper;
@@ -27,13 +30,21 @@ public class JsonDeserializer<T> implements Deserializer<T> {
     public T deserialize(String topic, byte[] data) {
         try {
             var dataType = Stream.of(type.getDeclaredMethods())
-                                 .filter(m -> m.getName().equals(topic))
+                                 .filter(m -> match(topic, m))
                                  .findFirst()
                                  .map(m -> m.getParameterTypes()[0])
                                  .orElseThrow(() -> new KafkaException("Method not found"));
             return (T) mapper.readValue(data, dataType);
         } catch (Exception e) {
             throw new KafkaException("Error deserializing JSON message", e);
+        }
+    }
+
+    private boolean match(String topic, Method m) {
+        if (m.isAnnotationPresent(Topic.class)) {
+            return m.getAnnotation(Topic.class).value().equals(topic);
+        } else {
+            return m.getName().equals(topic);
         }
     }
 
