@@ -1,40 +1,51 @@
 package io.vepo.maestro.kafka.manager;
 
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
+import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
+import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService.KafkaNode;
+import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
+import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
+import jakarta.inject.Inject;
 
 @Route("kafka/:clusterId([1-9][0-9]*)")
 public class KafkaClusterView extends MaestroScreen {
 
-    private List<String> fetchKafkaTopics(Long clusterId) {
-        // Implement the logic to fetch Kafka topics based on the clusterId
-        // This is a placeholder implementation
-        return List.of("Topic1", "Topic2", "Topic3");
-    }
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClusterView.class);
+
+    @Inject
+    KafkaAdminService adminService;
 
     @Override
     protected String getTitle() {
-        return "Kafka Cluster View";
+        return maybeCluster().map(c -> String.format("Cluster %s", c.name))
+                             .orElse("Cluster");
     }
 
     @Override
     protected Component buildContent() {
-        return getClusterId().map(clusterId -> {
-            var topicGrid = new Grid<>(String.class);
-            topicGrid.addColumn(topic -> topic).setHeader("Topic Name");
-            List<String> topics = fetchKafkaTopics(clusterId);
-            topicGrid.setItems(topics);
-            return topicGrid;
-        }).orElseGet(() -> {
-            getUI().ifPresent(ui -> ui.navigate(""));
-            Notification.show("Cluster not found");
-            return new Grid<>();
-        });
+        try {
+            var kafkaNodeGrid = new Grid<>(KafkaNode.class, false);
+            kafkaNodeGrid.addColumn(KafkaNode::id).setHeader("ID");
+            kafkaNodeGrid.addColumn(KafkaNode::host).setHeader("Host");
+            kafkaNodeGrid.addColumn(KafkaNode::port).setHeader("Port");
+            kafkaNodeGrid.addColumn(KafkaNode::rack).setHeader("Rack");
+            var nodes = adminService.describeBroker();
+            kafkaNodeGrid.setItems(nodes);
+            return new VerticalLayout(kafkaNodeGrid);
+        } catch (KafkaUnavailableException kue) {
+            logger.warn("Kafka Cluster is not available!", kue);
+        } catch (KafkaUnexpectedException kue) {
+            logger.error("Kafka Cluster is not good...", kue);
+        }
+        return new VerticalLayout(new Text("Could not connect with Kafka Cluster!"));
     }
 }

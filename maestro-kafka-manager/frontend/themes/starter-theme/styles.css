@@ -15,8 +15,13 @@
     flex-wrap: wrap;
     width: 100%;
 }
+
 .app-header>* {
     margin: auto 20px;
+}
+
+.app-header .app-header-title {
+    cursor: pointer;
 }
 
 .app-header>*:not(:first-child):not(:last-child) {

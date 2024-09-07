@@ -17,6 +17,7 @@ import com.vaadin.flow.router.Route;
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
 import io.vepo.maestro.kafka.manager.dialogs.CreateTopicDialog;
 import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
+import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService.KafkaTopic;
 import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
 import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
 import jakarta.inject.Inject;
@@ -30,7 +31,8 @@ public class KafkaTopicView extends MaestroScreen {
 
     @Override
     protected String getTitle() {
-        return "Kafka Cluster View";
+        return maybeCluster().map(c -> String.format("Topics %s", c.name))
+                             .orElse("Topics");
     }
 
     @Override
@@ -46,12 +48,14 @@ public class KafkaTopicView extends MaestroScreen {
     private Component build(Long clusterId) {
         try {
             var buttons = new HorizontalLayout();
-            var createTopicDialog = new CreateTopicDialog();
+            var createTopicDialog = new CreateTopicDialog(command -> logger.info("Creating topic {}", command));
             buttons.add(createTopicDialog);
             buttons.add(new Button("Create", evnt -> createTopicDialog.open()));
-            var topicGrid = new Grid<>(String.class);
-            topicGrid.addColumn(topic -> topic).setHeader("Topic Name");
-            List<String> topics = adminService.listTopics();
+            var topicGrid = new Grid<>(KafkaTopic.class, false);
+            topicGrid.addColumn(KafkaTopic::id).setHeader("ID");
+            topicGrid.addColumn(KafkaTopic::name).setHeader("Topic Name");
+            topicGrid.addColumn(KafkaTopic::internal).setHeader("Internal");
+            var topics = adminService.listTopics();
             topicGrid.setItems(topics);
             return new VerticalLayout(buttons, topicGrid);
         } catch (KafkaUnavailableException kue) {

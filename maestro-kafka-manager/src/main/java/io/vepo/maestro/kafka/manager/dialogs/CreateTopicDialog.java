@@ -1,9 +1,10 @@
 package io.vepo.maestro.kafka.manager.dialogs;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.kafka.common.config.TopicConfig;
@@ -16,26 +17,59 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.value.ValueChangeMode;
 
+import io.vepo.maestro.kafka.manager.kafka.Config;
+import io.vepo.maestro.kafka.manager.kafka.CreateTopicCommand;
+
 public class CreateTopicDialog extends Dialog {
 
-    public CreateTopicDialog() {
-        super();
+    public static class CreateTopicCommandBean {
+        private String name;
+        private int partitions;
+        private int replicationFactor;
 
-        setHeaderTitle("New Topic");
+        public CreateTopicCommandBean() {
+            name = "";
+            partitions = -1;
+            replicationFactor = -1;
+        }
 
-        add(createDialogLayout());
+        public String getName() {
+            return name;
+        }
 
-        Button saveButton = new Button("Save", e -> close());
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        Button cancelButton = new Button("Cancel", e -> close());
-        getFooter().add(cancelButton);
-        getFooter().add(saveButton);
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getPartitions() {
+            return partitions;
+        }
+
+        public void setPartitions(int partitions) {
+            this.partitions = partitions;
+        }
+
+        public int getReplicationFactor() {
+            return replicationFactor;
+        }
+
+        public void setReplicationFactor(int replicationFactor) {
+            this.replicationFactor = replicationFactor;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("CreateTopicCommandBean [name=%s, partitions=%s, replicationFactor=%s]",
+                                 name, partitions, replicationFactor);
+        }
+
     }
 
     private class Configuration {
@@ -73,6 +107,8 @@ public class CreateTopicDialog extends Dialog {
         }
     }
 
+    private static final Logger logger = LoggerFactory.getLogger(CreateTopicDialog.class);
+
     private static final List<String> TOPIC_PROPERTIES = Stream.of(TopicConfig.CLEANUP_POLICY_CONFIG,
                                                                    TopicConfig.COMPRESSION_TYPE_CONFIG,
                                                                    TopicConfig.DELETE_RETENTION_MS_CONFIG,
@@ -99,33 +135,94 @@ public class CreateTopicDialog extends Dialog {
                                                                    TopicConfig.UNCLEAN_LEADER_ELECTION_ENABLE_CONFIG)
                                                                .sorted().toList();
 
+    private final Binder<CreateTopicCommandBean> binder;
+
+    private AtomicReference<List<Configuration>> selectedConfigurations;
+
+    private Grid<Configuration> grid;
+
+    private GridListDataView<Configuration> view;
+
+    public CreateTopicDialog(Consumer<CreateTopicCommand> onSave) {
+        super();
+        this.binder = new Binder<>(CreateTopicCommandBean.class);
+
+        setHeaderTitle("New Topic");
+
+        selectedConfigurations = new AtomicReference<>(new ArrayList<>());
+        selectedConfigurations.get().add(new Configuration());
+
+        add(createDialogLayout());
+
+        Button saveButton = new Button("Save", e -> {
+            var bean = new CreateTopicCommandBean();
+            if (binder.writeBeanIfValid(bean)) {
+                logger.info("Creating topic {}", bean);
+                var command = new CreateTopicCommand(bean.getName(),
+                                                     bean.getPartitions(),
+                                                     bean.getReplicationFactor(),
+                                                     selectedConfigurations.get()
+                                                                           .stream()
+                                                                           .filter(c -> !c.isBlank())
+                                                                           .map(c -> new Config(c.getKey(), c.getValue()))
+                                                                           .toList());
+                onSave.accept(command);
+                close();
+            } else {
+                logger.warn("Invalid form {}", binder.validate());
+            }
+        });
+        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button cancelButton = new Button("Cancel", e -> close());
+        getFooter().add(cancelButton);
+        getFooter().add(saveButton);
+    }
+
+    @Override
+    public void open() {
+        binder.readBean(new CreateTopicCommandBean());
+        selectedConfigurations.get().clear();
+        selectedConfigurations.get().add(new Configuration());
+        view = grid.setItems(selectedConfigurations.get());
+        super.open();
+    }
+
     private FormLayout createDialogLayout() {
+        var dialogLayout = new FormLayout();
 
         var txtName = new TextField();
+        binder.forField(txtName)
+              .asRequired("Name is required")
+              .bind(CreateTopicCommandBean::getName, CreateTopicCommandBean::setName);
+        var item = dialogLayout.addFormItem(txtName, "Name");
+        dialogLayout.setColspan(item, 2);
+
         var nmbPartitions = new IntegerField();
         nmbPartitions.setStepButtonsVisible(true);
         nmbPartitions.setMin(1);
+        binder.forField(nmbPartitions)
+              .bind(c -> c.getPartitions() == -1 ? null : c.getPartitions(), (c, p) -> c.setPartitions(p == null ? -1 : p));
 
         var nmbReplicationFactor = new IntegerField();
         nmbReplicationFactor.setStepButtonsVisible(true);
         nmbReplicationFactor.setMin(1);
+        binder.forField(nmbReplicationFactor)
+              .bind(c -> c.getReplicationFactor() == -1 ? null : c.getReplicationFactor(),
+                    (c, p) -> c.setReplicationFactor(p == null ? -1 : p));
 
-        var dialogLayout = new FormLayout();
-        var item = dialogLayout.addFormItem(txtName, "Name");
-        dialogLayout.setColspan(item, 2);
         dialogLayout.addFormItem(nmbPartitions, "Partitions");
         dialogLayout.addFormItem(nmbReplicationFactor, "Replication Factor");
 
-        var grid = new Grid<Configuration>();
+        grid = new Grid<Configuration>();
         var editor = grid.getEditor();
         var binder = new Binder<>(Configuration.class);
         editor.setBinder(binder);
         editor.setBuffered(true);
-        var items = new ArrayList<>(List.of(new Configuration()));
-        var view = grid.setItems(items);
+        view = grid.setItems(selectedConfigurations.get());
         Runnable checkItems = () -> {
             if (view.getItemCount() == 0 || !view.getItem(view.getItemCount() - 1).isBlank()) {
                 view.addItem(new Configuration());
+                selectedConfigurations.set(new ArrayList<>(view.getItems().toList()));
             }
         };
         grid.addComponentColumn(c -> {
@@ -180,10 +277,12 @@ public class CreateTopicDialog extends Dialog {
                                                                          view.removeItem(c);
                                                                          if (view.getItemCount() == 0) {
                                                                              view.addItem(new Configuration());
+                                                                             selectedConfigurations.set(view.getItems().toList());
                                                                          }
                                                                      })))
             .setFlexGrow(0)
             .setHeader("Actions");
+
         dialogLayout.setColspan(dialogLayout.addFormItem(grid, "Configurations"), 2);
 
         return dialogLayout;

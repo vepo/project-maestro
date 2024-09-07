@@ -11,6 +11,7 @@ import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 
+import io.vepo.maestro.kafka.manager.model.Cluster;
 import io.vepo.maestro.kafka.manager.model.ClusterRepository;
 import jakarta.inject.Inject;
 
@@ -30,12 +31,25 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
              .ifPresent(clusterSelector::select);
     }
 
+    protected Optional<Cluster> maybeCluster() {
+        return clusterSelector.getSelectedCluster();
+    }
+
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
+        getChildren().filter(c -> c instanceof MaestroMenu || c.getId()
+                                                               .filter(id -> id.equals("app-header"))
+                                                               .isPresent())
+                     .forEach(c -> this.remove(c));
+
         var header = new Div();
+        header.setId("app-header");
         header.addClassName("app-header");
         var maestroMenu = new MaestroMenu(clusterSelector.getSelected());
-        header.add(new Div(new Text("Maestro Kafka Manager")),
+        var appHeader = new Div(new Text("Maestro Kafka Manager"));
+        appHeader.addClassName("app-header-title");
+        appHeader.addClickListener(e -> getUI().get().navigate(""));
+        header.add(appHeader,
                    new Div(new Text(getTitle())),
                    new ClusterSwitch(clusterSelector.getSelected(),
                                      clusterRepository.findAll(),
@@ -43,6 +57,7 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
                                          clusterSelector.select(cluster.id);
                                          maestroMenu.updateSelectedCluster(cluster.id);
                                      }));
+
         addToNavbar(header);
         addToDrawer(maestroMenu);
         setContent(buildContent());
