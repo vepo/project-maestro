@@ -26,8 +26,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 
 import io.vepo.maestro.framework.apps.Data;
-import io.vepo.maestro.framework.apps.app1.ClassConsumerWithoutTopicApp;
-import io.vepo.maestro.framework.apps.app2.ClassConsumerWithTopicApp;
+import io.vepo.maestro.framework.apps.app1.Application1;
+import io.vepo.maestro.framework.apps.app2.Application2;
+import io.vepo.maestro.framework.apps.app3.Application3;
+import io.vepo.maestro.framework.serializers.AvroSerializer;
 import io.vepo.maestro.framework.serializers.JsonSerializer;
 
 @Testcontainers
@@ -57,15 +59,15 @@ class MaestroApplicationTest {
     @Test
     @DisplayName("It should start the application and consume messages with MaestroConsumer")
     void classConsumerWithoutTopicTest() throws InterruptedException, ExecutionException {
-        createTopics("consume");
-        try (var app = startApp(ClassConsumerWithoutTopicApp.class)) {
-            var buffer = ClassConsumerWithoutTopicApp.buffer;
+        createTopics("consume-data");
+        try (var app = startApp(Application1.class)) {
+            var buffer = Application1.buffer;
             var configs = new Properties();
             configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
             configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
             try (var producer = new KafkaProducer<String, Data>(configs)) {
-                var maybeMetadata = producer.send(new ProducerRecord<String, Data>("consume", "key", new Data("Hello, World!", 42, 666L)));
+                var maybeMetadata = producer.send(new ProducerRecord<String, Data>("consume-data", "key", new Data("Hello, World!", 42, 666L)));
                 LOGGER.info("Metadata: {}", maybeMetadata.get());
             }
             await().until(() -> buffer.receivedDataSize() == 1);
@@ -78,12 +80,32 @@ class MaestroApplicationTest {
     @DisplayName("It should start the application and consume messages with MaestroConsumer defining the topic name")
     void classConsumerWithTopicTest() throws InterruptedException, ExecutionException {
         createTopics("topic-consume");
-        try (var app = startApp(ClassConsumerWithTopicApp.class)) {
-            var buffer = ClassConsumerWithTopicApp.buffer;
+        try (var app = startApp(Application2.class)) {
+            var buffer = Application2.buffer;
             var configs = new Properties();
             configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
             configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+            try (var producer = new KafkaProducer<String, Data>(configs)) {
+                var maybeMetadata = producer.send(new ProducerRecord<String, Data>("topic-consume", "key", new Data("Hello, World!", 42, 666L)));
+                LOGGER.info("Metadata: {}", maybeMetadata.get());
+            }
+            await().until(() -> buffer.receivedDataSize() == 1);
+            assertThat(buffer.pollReceivedData()).hasSize(1)
+                                                 .containsExactly(new Data("Hello, World!", 42, 666L));
+        }
+    }
+
+    @Test
+    @DisplayName("It should start the application and consume avro messages with MaestroConsumer")
+    void classConsumerWithAvroTest() throws InterruptedException, ExecutionException {
+        createTopics("topic-consume");
+        try (var app = startApp(Application3.class)) {
+            var buffer = Application3.buffer;
+            var configs = new Properties();
+            configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+            configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, AvroSerializer.class);
             try (var producer = new KafkaProducer<String, Data>(configs)) {
                 var maybeMetadata = producer.send(new ProducerRecord<String, Data>("topic-consume", "key", new Data("Hello, World!", 42, 666L)));
                 LOGGER.info("Metadata: {}", maybeMetadata.get());
