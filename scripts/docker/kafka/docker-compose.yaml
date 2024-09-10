@@ -42,3 +42,23 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://:9096,CONTROLLER://kafka-2:9097
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9096
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-0:9093,2@kafka-1:9095,3@kafka-2:9097
+  producer-1:
+    image: jbangdev/jbang-action
+    container_name: producer-1
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    volumes:
+      - ./producer:/producer
+    command: /producer/ProduceData.java
+  consumer-1:
+    image: jbangdev/jbang-action
+    container_name: consumer-1
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    volumes:
+      - ./consumer:/consumer
+    command: /consumer/ConsumeData.java

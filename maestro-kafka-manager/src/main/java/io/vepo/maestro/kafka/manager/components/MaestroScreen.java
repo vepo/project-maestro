@@ -1,5 +1,8 @@
 package io.vepo.maestro.kafka.manager.components;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import com.vaadin.flow.component.Component;
@@ -23,12 +26,21 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     @Inject
     ClusterRepository clusterRepository;
 
+    private Map<String, String> routeParameters = Collections.synchronizedMap( new HashMap<>());
+
+    protected Optional<String> getRouteParameter(String name) {
+        return Optional.ofNullable(routeParameters.get(name));
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
-        event.getRouteParameters()
-             .get("clusterId")
-             .map(Long::valueOf)
-             .ifPresent(clusterSelector::select);
+        var params = event.getRouteParameters();
+        params.getParameterNames()
+              .forEach(name -> params.get(name)
+                                     .ifPresent(value -> routeParameters.put(name, value)));
+        params.get("clusterId")
+              .map(Long::valueOf)
+              .ifPresent(clusterSelector::select);
     }
 
     protected Optional<Cluster> maybeCluster() {

@@ -123,6 +123,34 @@ public class KafkaAdminService {
                      .toList();
     }
 
+    public void deleteTopic(String name) {
+        client.ifPresent(client -> {
+            try {
+                client.deleteTopics(List.of(name)).all().get(500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                LOGGER.error("Could not delete topic {}", name, e);
+            } catch (TimeoutException e) {
+                LOGGER.error("Could not delete topic {}", name, e);
+            }
+        });
+    }
+
+    public void createTopic(CreateTopicCommand command) {
+        client.ifPresent(client -> {
+            try {
+                client.createTopics(List.of(command.toNewTopic())).all().get(500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException e) {
+                LOGGER.error("Could not create topic {}", command, e);
+            } catch (TimeoutException e) {
+                LOGGER.error("Could not create topic {}", command, e);
+            }
+        });
+    }
+
     @PostConstruct
     void setup() {
         client = clusterSelector.getSelectedCluster()

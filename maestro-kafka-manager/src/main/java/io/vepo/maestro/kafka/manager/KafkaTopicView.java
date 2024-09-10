@@ -1,7 +1,5 @@
 package io.vepo.maestro.kafka.manager;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,14 +45,41 @@ public class KafkaTopicView extends MaestroScreen {
 
     private Component build(Long clusterId) {
         try {
+            var topicGrid = new Grid<>(KafkaTopic.class, false);
+
             var buttons = new HorizontalLayout();
-            var createTopicDialog = new CreateTopicDialog(command -> logger.info("Creating topic {}", command));
+            var createTopicDialog = new CreateTopicDialog(command -> {
+                try {
+                    logger.info("Creating topic {}", command);
+                    adminService.createTopic(command);
+                    topicGrid.setItems(adminService.listTopics());
+                } catch (KafkaUnavailableException kue) {
+                    logger.warn("Kafka Cluster is not available!", kue);
+                } catch (KafkaUnexpectedException kue) {
+                    logger.error("Kafka Cluster is not good...", kue);
+                }
+            });
             buttons.add(createTopicDialog);
             buttons.add(new Button("Create", evnt -> createTopicDialog.open()));
-            var topicGrid = new Grid<>(KafkaTopic.class, false);
             topicGrid.addColumn(KafkaTopic::id).setHeader("ID");
             topicGrid.addColumn(KafkaTopic::name).setHeader("Topic Name");
             topicGrid.addColumn(KafkaTopic::internal).setHeader("Internal");
+            topicGrid.addComponentColumn(topic -> {
+                var btnDelete = new Button("Delete", evnt -> {
+                    try {
+                        adminService.deleteTopic(topic.name());
+                        topicGrid.setItems(adminService.listTopics());
+                    } catch (KafkaUnavailableException kue) {
+                        logger.warn("Kafka Cluster is not available!", kue);
+                    } catch (KafkaUnexpectedException kue) {
+                        logger.error("Kafka Cluster is not good...", kue);
+                    }
+                });
+                var btnListen = new Button("Listen", evnt -> {
+                    getUI().ifPresent(ui -> ui.navigate("kafka/" + clusterId + "/topics/" + topic.name()));
+                });
+                return new HorizontalLayout(btnDelete, btnListen);
+            });
             var topics = adminService.listTopics();
             topicGrid.setItems(topics);
             return new VerticalLayout(buttons, topicGrid);
