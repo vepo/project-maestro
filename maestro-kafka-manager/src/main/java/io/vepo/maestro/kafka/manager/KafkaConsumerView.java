@@ -1,5 +1,6 @@
 package io.vepo.maestro.kafka.manager;
 
+import org.apache.kafka.clients.admin.MemberDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,9 +33,19 @@ public class KafkaConsumerView extends MaestroScreen {
     protected Component buildContent() {
         try {
             var consumerGrid = new Grid<>(ConsumerGroup.class, false);
-            consumerGrid.addColumn(ConsumerGroup::id).setHeader("ID");
-            consumerGrid.addColumn(ConsumerGroup::type).setHeader("Type");
-            consumerGrid.addColumn(ConsumerGroup::state).setHeader("State");
+            consumerGrid.addColumn(ConsumerGroup::id).setHeader("ID").setFlexGrow(0);
+            consumerGrid.addColumn(ConsumerGroup::type).setHeader("Type").setFlexGrow(0);
+            consumerGrid.addColumn(ConsumerGroup::state).setHeader("State").setFlexGrow(0);
+            consumerGrid.addColumn(ConsumerGroup::coordinator).setHeader("Coordinator").setFlexGrow(0);
+            consumerGrid.addComponentColumn(c -> {
+                var memberGrid = new Grid<MemberDescription>();
+                memberGrid.addColumn(MemberDescription::consumerId).setHeader("Consumer ID");
+                memberGrid.addColumn(MemberDescription::clientId).setHeader("Client ID");
+                memberGrid.addColumn(MemberDescription::host).setHeader("Host");
+                memberGrid.addColumn(MemberDescription::assignment).setHeader("Assignment");
+                memberGrid.setItems(c.members());
+                return memberGrid;
+            }).setHeader("Members");
             var consumers = adminService.listConsumers();
             consumerGrid.setItems(consumers);
             return new VerticalLayout(consumerGrid);

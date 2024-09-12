@@ -62,3 +62,27 @@ services:
     volumes:
       - ./consumer:/consumer
     command: /consumer/ConsumeData.java
+  consumer-1:
+    image: jbangdev/jbang-action
+    container_name: consumer-1
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    environment:
+      GROUP_ID: main-group
+    volumes:
+      - ./consumer:/consumer
+    command: /consumer/ConsumeData.java
+  consumer-2:
+    image: jbangdev/jbang-action
+    container_name: consumer-2
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    environment:
+      GROUP_ID: main-group
+    volumes:
+      - ./consumer:/consumer
+    command: /consumer/ConsumeData.java

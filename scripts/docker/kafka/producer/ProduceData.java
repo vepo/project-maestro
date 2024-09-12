@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.ExecutionException;
+import java.util.UUID;
 
 public class ProduceData {
     public static void main(String[] args) {
@@ -25,9 +26,9 @@ public class ProduceData {
                    }
                });
         try(var producer = new KafkaProducer<String, String>(configs)) {
-            var record = new ProducerRecord<String, String>("topic", "key", "value");
             while (running.get()) {
                 try {
+                    var record = new ProducerRecord<String, String>("topic", "key-" + UUID.randomUUID().toString(), "value-" + UUID.randomUUID().toString());
                     var metadata = producer.send(record).get();
                     System.out.println("Record sent to partition " + metadata.partition() + " with offset " + metadata.offset());
                     Thread.sleep(1000);

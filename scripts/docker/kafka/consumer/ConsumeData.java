@@ -17,7 +17,7 @@ public class ConsumeData {
     public static void main(String[] args) {
         var configs = new Properties();
         configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:9092, kafka-1:9094, kafka-2:9096");
-        configs.put(ConsumerConfig.GROUP_ID_CONFIG, "meu-consumer");
+        configs.put(ConsumerConfig.GROUP_ID_CONFIG, System.getenv().getOrDefault("GROUP_ID", "group"));
         configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
