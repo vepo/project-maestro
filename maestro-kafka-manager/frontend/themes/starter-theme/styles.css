@@ -34,3 +34,33 @@ vaadin-text-field,
 vaadin-integer-field {
     width: 100%;
 }
+
+vaadin-grid-cell-content {
+    text-overflow: unset;
+    white-space: break-spaces;
+    overflow: unset;
+}
+
+vaadin-grid-cell-content:has(>vaadin-grid) {
+    padding: 0;
+}
+
+table.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.custom-table tr th {
+    font-weight: bold;
+    background-color: #DDDDDD;
+}
+
+.custom-table tr th,
+.custom-table tr td {
+    padding: 10px;
+    border: 1px solid #DDDDDD;
+}
+
+.custom-table tr.even {
+    background-color: #f2f2f2;
+}
