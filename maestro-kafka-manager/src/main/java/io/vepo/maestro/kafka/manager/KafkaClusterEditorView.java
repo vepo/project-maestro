@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -21,6 +20,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.Command;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
+import io.vepo.maestro.kafka.manager.components.html.EntityTable;
 import io.vepo.maestro.kafka.manager.model.Cluster;
 import io.vepo.maestro.kafka.manager.model.ClusterRepository;
 import jakarta.inject.Inject;
@@ -124,7 +124,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                     LOGGER.error("Error saving cluster", e);
                     return;
                 }
-                repository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));                
+                repository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));
                 showGrid();
             });
             updateButton.setVisible(false);
@@ -157,27 +157,35 @@ public class KafkaClusterEditorView extends MaestroScreen {
     }
 
     private class GridView extends VerticalLayout {
-        private final Grid<KafkaCluster> grid;
+        private final EntityTable<KafkaCluster> table;
 
         private GridView() {
-            grid = new Grid<KafkaCluster>();
-            grid.addColumn(cluster -> cluster.id.orElse(0l)).setHeader("Cluster #");
-            grid.addColumn(cluster -> cluster.name).setHeader("Name");
-            grid.addColumn(cluster -> cluster.bootstrapServers).setHeader("Bootstrap Servers");
-            grid.addComponentColumn(cluster -> {
-                var editButton = new Button("Edit", event -> showForm(cluster));
-                var deleteButton = new Button("Delete", event -> {
-                    repository.delete(cluster.id.get());
-                    grid.setItems(loadClusters());
-                });
-                return new HorizontalLayout(editButton, deleteButton);
-            });
-            grid.setItems(loadClusters());
-            add(createActionButton(), grid);
+            table = new EntityTable<>(loadClusters());
+            table.addColumn("Cluster #")
+                 .withValue(cluster -> Long.toString(cluster.getId().orElse(0l)))
+                 .build()
+                 .addColumn("Name")
+                 .withValue(KafkaCluster::getName)
+                 .build()
+                 .addColumn("Bootstrap Servers")
+                 .withValue(KafkaCluster::getBootstrapServers)
+                 .build()
+                 .addColumn("Actions")
+                 .withComponent(cluster -> {
+                     var editButton = new Button("Edit", event -> showForm(cluster));
+                     var deleteButton = new Button("Delete", event -> {
+                         repository.delete(cluster.id.get());
+                         table.update(loadClusters());
+                     });
+                     return new HorizontalLayout(editButton, deleteButton);
+                 })
+                 .build()
+                 .bind();
+            add(createActionButton(), table);
         }
 
         public void reloadItems() {
-            grid.setItems(loadClusters());
+            table.update(loadClusters());
         }
 
         private Component createActionButton() {

@@ -3,13 +3,14 @@ package io.vepo.maestro.kafka.manager.components.html;
 import java.util.Objects;
 
 import com.vaadin.flow.component.ClickNotifier;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasOrderedComponents;
 import com.vaadin.flow.component.HtmlContainer;
 import com.vaadin.flow.component.Tag;
+import com.vaadin.flow.component.Text;
 
 @Tag("table")
-public class Table extends HtmlContainer
-        implements ClickNotifier<Table>, HasOrderedComponents {
+public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrderedComponents {
 
     protected static record ColSpan(int i) {
 
@@ -45,6 +46,12 @@ public class Table extends HtmlContainer
 
     private Tr currentBodyRow;
 
+    private boolean even;
+
+    private int rowSize;
+
+    private int rowCounter;
+
     /**
      * Creates a new empty div.
      */
@@ -61,6 +68,14 @@ public class Table extends HtmlContainer
         add(thead, tbody);
     }
 
+    protected void clear() {
+        thead.removeAll();
+        currentHeaderRow = null;
+
+        tbody.removeAll();
+        currentBodyRow = null;
+    }
+
     protected Table addHeader(String header, RowSpan rowSpan) {
         return addHeader(header, rowSpan, colspan(1), false);
     }
@@ -73,11 +88,11 @@ public class Table extends HtmlContainer
         return addHeader(header, rowSpan, colspan, false);
     }
 
-    private boolean even;
-    private int rowSize;
-    private int rowCounter;
-
     protected Table addCell(String value, RowSpan rowSpan, ColSpan colspan, boolean lastCell) {
+        return addCell(new Text(value), rowSpan, colspan, lastCell);
+    }
+
+    protected Table addCell(Component value, RowSpan rowSpan, ColSpan colspan, boolean lastCell) {
         if (Objects.isNull(currentBodyRow)) {
             currentBodyRow = new Tr();
             if (rowSize == 0) {
@@ -89,7 +104,7 @@ public class Table extends HtmlContainer
             tbody.add(currentBodyRow);
         }
         var cell = new Td();
-        cell.setText(value);
+        cell.add(value);
         colspan.apply(cell);
         rowSpan.apply(cell);
         currentBodyRow.add(cell);
@@ -113,7 +128,15 @@ public class Table extends HtmlContainer
         return addCell(value, rowSpan(1), colspan(1), false);
     }
 
+    protected Table addCell(Component value) {
+        return addCell(value, rowSpan(1), colspan(1), false);
+    }
+
     protected Table addCell(String value, boolean lastCell) {
+        return addCell(value, rowSpan(1), colspan(1), lastCell);
+    }
+
+    protected Table addCell(Component value, boolean lastCell) {
         return addCell(value, rowSpan(1), colspan(1), lastCell);
     }
 

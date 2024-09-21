@@ -14,6 +14,7 @@ import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.MemberDescription;
+import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.GroupType;
@@ -49,13 +50,26 @@ public class KafkaAdminService {
         }
     }
 
-    public record KafkaTopic(String id, String name, boolean internal) {
-        public KafkaTopic(TopicListing topic) {
-            this(topic.topicId().toString(), topic.name(), topic.isInternal());
+    public record KafkaTopic(String id, String name, int partitions, int replicas, boolean internal) {
+        public KafkaTopic(TopicListing topic, TopicDescription description) {
+            this(topic.topicId().toString(), topic.name(), description.partitions().size(), description.partitions().get(0).replicas().size(), topic.isInternal());
         }
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaAdminService.class);
+
+    private static KafkaResponse<Map<String, TopicDescription>, KafkaUnexpectedException> describeTopics(AdminClient client, List<String> topicNames) {
+        try {
+            return new KafkaResponse<>(client.describeTopics(topicNames).allTopicNames().get(500, TimeUnit.MILLISECONDS));
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null; // this line is never executed!
+        } catch (ExecutionException e) {
+            return new KafkaResponse<>(new KafkaUnexpectedException(e));
+        } catch (TimeoutException e) {
+            return new KafkaResponse<>(new KafkaUnavailableException("Could not connecto with Kafka Brokers!", e));
+        }
+    }
 
     private static KafkaResponse<Map<String, ConsumerGroupDescription>, KafkaUnexpectedException> describeConsumerGroups(AdminClient client, List<String> groupIds) {
         try {
@@ -118,11 +132,18 @@ public class KafkaAdminService {
     private Optional<AdminClient> client;
 
     public List<KafkaTopic> listTopics() throws KafkaUnexpectedException {
-        return client.map(KafkaAdminService::listTopicsInternal)
-                     .get()
-                     .getOrThrow()
-                     .stream()
-                     .map(KafkaTopic::new)
+        var topics = client.map(KafkaAdminService::listTopicsInternal)
+                           .get()
+                           .getOrThrow()
+                           .stream()
+                           .toList();
+        var descriptions = client.map(c -> describeTopics(c, topics.stream()
+                                                                   .map(TopicListing::name)
+                                                                   .toList()))
+                                 .get()
+                                 .getOrThrow();
+        return topics.stream()
+                     .map(topic -> new KafkaTopic(topic, descriptions.get(topic.name())))
                      .toList();
     }
 
