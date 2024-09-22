@@ -10,6 +10,9 @@
   <packaging>pom</packaging>
   <name>Maestro</name>
   <url>https://blog.vepo.dev/</url>
+  <description>
+    Project Maestro is a set of tools to manage Apache Kafka clusters.
+  </description>
 
   <properties>
     <vaadin.version>24.4.7</vaadin.version>
@@ -20,6 +23,36 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
   </properties>
+
+  <licenses>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/vepo/project-maestro.git</connection>
+    <developerConnection>scm:git:git@github.com:vepo/project-maestro.git</developerConnection>
+    <url>https://github.com/vepo/project-maestro</url>
+    <tag>HEAD</tag>
+  </scm>
+
+
+  <developers>
+    <developer>
+      <id>vepo</id>
+      <name>Victor Osório</name>
+      <email>victor.perticarrari@gmail.com</email>
+      <url>https://vepo.dev</url>
+      <roles>
+        <role>architect</role>
+        <role>developer</role>
+      </roles>
+      <timezone>America/Sao_Paulo</timezone>
+    </developer>
+  </developers>
 
   <repositories>
     <repository>
