@@ -1,15 +1,11 @@
 package io.vepo.maestro.kafka.manager;
 
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.Executors;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,19 +16,32 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.router.BeforeLeaveEvent;
+import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.Route;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
 import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
+import io.vepo.maestro.kafka.manager.kafka.TopicConsumer;
 import jakarta.inject.Inject;
 
 @Route("kafka/:clusterId([1-9][0-9]*)/topics/:topicName([a-zA-Z0-9\\-\\_]+)")
-public class ListenKafkaTopicView extends MaestroScreen {
+public class ListenKafkaTopicView extends MaestroScreen implements BeforeLeaveObserver {
+
+    public record Message(String key, String value, long offset, int partition, long timestamp) {
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ListenKafkaTopicView.class);
 
     @Inject
     KafkaAdminService adminService;
+
+    private AtomicReference<TopicConsumer> consumer = new AtomicReference<>();
+
+    @Override
+    public void beforeLeave(BeforeLeaveEvent event) {
+        closeConsumer();
+    }
 
     @Override
     protected String getTitle() {
@@ -41,14 +50,13 @@ public class ListenKafkaTopicView extends MaestroScreen {
                              .orElse("Topics");
     }
 
-    public record Message(String key, String value, long offset, int partition, long timestamp) {
-    }
-
     @Override
     protected Component buildContent() {
-        var layout = new FormLayout();
-        layout.setSizeFull();
-        layout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 3));
+        closeConsumer();
+
+        var consumerParametersForm = new FormLayout();
+        consumerParametersForm.setWidthFull();
+        consumerParametersForm.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 4));
         var cmbKeySeralizer = new ComboBox<String>();
         cmbKeySeralizer.setWidthFull();
         cmbKeySeralizer.setItems("StringSerializer",
@@ -60,7 +68,7 @@ public class ListenKafkaTopicView extends MaestroScreen {
                                  "AvroSerializer",
                                  "ProtobufSerializer");
         cmbKeySeralizer.setValue("StringSerializer");
-        layout.addFormItem(cmbKeySeralizer, "Key Serializer");
+        consumerParametersForm.addFormItem(cmbKeySeralizer, "Key Serializer");
 
         var cmbValueSeralizer = new ComboBox<String>();
         cmbValueSeralizer.setWidthFull();
@@ -73,66 +81,75 @@ public class ListenKafkaTopicView extends MaestroScreen {
                                    "AvroSerializer",
                                    "ProtobufSerializer");
         cmbValueSeralizer.setValue("StringSerializer");
-        layout.addFormItem(cmbValueSeralizer, "Value Serializer");
+        consumerParametersForm.addFormItem(cmbValueSeralizer, "Value Serializer");
         var btnStart = new Button("Start");
-        btnStart.setMaxWidth("250px");
-        layout.add(btnStart);
+        consumerParametersForm.add(btnStart);
+        var btnStop = new Button("Stop");
+        btnStop.setEnabled(false);
+        consumerParametersForm.add(btnStop);
 
         var gridMessages = new Grid<Message>();
         var dataProvider = new ListDataProvider<Message>(new ArrayList<>());
         gridMessages.setDataProvider(dataProvider);
         gridMessages.addColumn(Message::key).setHeader("Key");
         gridMessages.addColumn(Message::value).setHeader("Value");
-        gridMessages.addColumn(Message::offset).setHeader("Offset");
-        gridMessages.addColumn(Message::partition).setHeader("Partition");
-        gridMessages.addColumn(Message::timestamp).setHeader("Timestamp");
+        gridMessages.addColumn(Message::offset).setHeader("Offset").setSortable(true);
+        gridMessages.addColumn(Message::partition).setHeader("Partition").setSortable(true);
+        gridMessages.addColumn(Message::timestamp).setHeader("Timestamp").setSortable(true);
         gridMessages.setSizeFull();
+        var cluster = maybeCluster().orElseThrow(() -> new IllegalArgumentException("Cluster not found"));
+        consumer.set(new TopicConsumer(cluster));
 
         btnStart.addClickListener(e -> {
             var keySerializer = cmbKeySeralizer.getValue();
             var valueSerializer = cmbValueSeralizer.getValue();
+            btnStart.setEnabled(false);
+            btnStop.setEnabled(true);
             // Start listening
-            Executors.newSingleThreadExecutor()
-                     .submit(() -> {
-                         var topicName = getRouteParameter("topicName").orElseThrow(() -> new IllegalArgumentException("Topic Name is required"));
-                         try {
-                            LOGGER.info("Starting to listen topic: {} - {}", topicName, maybeCluster());
-                         } catch (Exception ex) {
-                             LOGGER.error("Error listening topic: {}", topicName, ex);
-                         }
-                         maybeCluster().ifPresent(c -> {
-                             try {
-                                LOGGER.info("Starting to listen topic: {} on cluster: {}", topicName, c);
-                                 var configs = new Properties();
-                                 configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, c.bootstrapServers);
-                                 configs.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-group-" + topicName + "-" + System.currentTimeMillis());
-                                 configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, serializer(keySerializer));
-                                 configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, serializer(valueSerializer));
-                                 configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-                                 LOGGER.info("Starting consumer with configs: {}", configs);
-                                 try (var consumer = new KafkaConsumer<String, String>(configs)) {
-                                     consumer.subscribe(List.of(topicName));
-                                     while (true) {
-                                         var messages = StreamSupport.stream(consumer.poll(Duration.ofSeconds(1)).spliterator(), false)
-                                                                     .map(record -> new Message(record.key(), record.value(), record.offset(), record.partition(), record.timestamp()))
-                                                                     .collect(Collectors.toList());
-                                         if (!messages.isEmpty()) {
-                                             LOGGER.info("Received {} messages", messages.size());
-                                             dataProvider.getItems().addAll(messages);
+            var topicName = getRouteParameter("topicName").orElseThrow(() -> new IllegalArgumentException("Topic Name is required"));
+            consumer.get().start(topicName,
+                                 serializer(keySerializer),
+                                 serializer(valueSerializer),
+                                 records -> {
+                                     var messages = StreamSupport.stream(records.spliterator(), false)
+                                                                 .map(record -> new Message(record.key().toString(),
+                                                                                            record.value().toString(),
+                                                                                            record.offset(),
+                                                                                            record.partition(),
+                                                                                            record.timestamp()))
+                                                                 .collect(Collectors.toList());
+                                     getUI().ifPresent(ui -> {
+                                         if (ui.isAttached()) {
+                                             ui.access(() -> {
+                                                 dataProvider.getItems().addAll(messages);
+                                                 dataProvider.refreshAll();
+                                                 ui.push();
+                                             });
+                                         } else {
+                                            consumer.get().close();
                                          }
-                                     }
-                                 } catch (Exception ex) {
-                                     LOGGER.error("Error listening topic: {}", topicName, ex);
-                                 }
+                                     });
+                                 });
 
-                                 LOGGER.info("Stopped listening topic: {}", topicName);
-                             } catch (Exception ex) {
-                                 LOGGER.error("Error listening topic: {}", topicName, ex);
-                             }
-                         });
-                     });
         });
-        return new VerticalLayout(layout, gridMessages);
+        
+        btnStop.addClickListener(e -> {
+            btnStart.setEnabled(true);
+            btnStop.setEnabled(false);
+            consumer.get().close();
+        });
+        var contents = new VerticalLayout(consumerParametersForm, gridMessages);
+        contents.setSizeFull();
+        return contents;
+    }
+
+    private void closeConsumer() {
+        consumer.updateAndGet(c -> {
+            if (Objects.nonNull(c)) {
+                c.close();
+            }
+            return null;
+        });
     }
 
     private String serializer(String serializer) {
