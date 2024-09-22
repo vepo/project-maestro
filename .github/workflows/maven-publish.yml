@@ -58,9 +58,11 @@ jobs:
         CI_COMMIT_MESSAGE: "[Creating Snapshot] ${{ github.event.release.tag_name }}"
         CI_COMMIT_AUTHOR: "Victor Osório"
         CI_COMMIT_EMAIL: "victor.perticarrari@gmail.com"
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
         git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
         git add pom.xml **/pom.xml
         git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-        git push 
+        git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}
+        git push origin ${{ github.ref_name }}
