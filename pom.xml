@@ -5,7 +5,7 @@
 
   <groupId>dev.vepo.maestro</groupId>
   <artifactId>parent-maestro</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.3</version>
 
   <packaging>pom</packaging>
   <name>Maestro</name>
