@@ -61,7 +61,6 @@ jobs:
         git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
         git add pom.xml **/pom.xml
         git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-        git tag -a ${{ env.RELEASE_VERSION }} -m "${{ env.CI_COMMIT_MESSAGE }}"
     - name: Increase version
       run: mvn versions:set -DnextSnapshot
     - name: GIT commit snapshot version
@@ -75,4 +74,3 @@ jobs:
         git add pom.xml **/pom.xml
         git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
         git push origin ${{ github.ref_name }}
-        git push origin tag ${{ env.RELEASE_VERSION }}
