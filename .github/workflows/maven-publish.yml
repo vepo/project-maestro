@@ -3,9 +3,7 @@
 
 name: Maven Package
 
-on:
-  release:
-    types: [created]
+on: workflow_dispatch
 
 jobs:
   build:
@@ -37,7 +35,32 @@ jobs:
             "username": "${{ secrets.OSSRH_USERNAME }}", 
             "password": "${{ secrets.OSSRH_TOKEN }}"
           }]
+    - name: Change version to release
+      run: mvn versions:set -DremoveSnapshot
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: Publish package
       run: mvn --batch-mode deploy -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}"
+    - name: GIT commit and push docs
+      env: 
+        CI_COMMIT_MESSAGE: "[Creating Release] ${{ github.event.release.tag_name }}"
+        CI_COMMIT_AUTHOR: "Victor Osório"
+        CI_COMMIT_EMAIL: "victor.perticarrari@gmail.com"
+      run: |
+        git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+        git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
+        git add pom.xml **/pom.xml
+        git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+    - name: Increase version
+      run: mvn versions:set -DnextSnapshot
+    - name: GIT commit and push docs
+      env: 
+        CI_COMMIT_MESSAGE: "[Creating Snapshot] ${{ github.event.release.tag_name }}"
+        CI_COMMIT_AUTHOR: "Victor Osório"
+        CI_COMMIT_EMAIL: "victor.perticarrari@gmail.com"
+      run: |
+        git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+        git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
+        git add pom.xml **/pom.xml
+        git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+        git push origin 
