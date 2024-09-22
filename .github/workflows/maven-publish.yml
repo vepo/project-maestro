@@ -63,4 +63,4 @@ jobs:
         git config --global user.email "${{ env.CI_COMMIT_EMAIL }}"
         git add pom.xml **/pom.xml
         git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-        git push origin 
+        git push 
