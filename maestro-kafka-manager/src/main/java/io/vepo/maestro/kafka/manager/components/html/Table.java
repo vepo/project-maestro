@@ -12,6 +12,10 @@ import com.vaadin.flow.component.Text;
 @Tag("table")
 public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrderedComponents {
 
+    public enum CellClass {
+        DEFAULT, NUMERIC
+    }
+
     protected static record ColSpan(int i) {
 
         public void apply(HtmlContainer cell) {
@@ -39,17 +43,11 @@ public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrd
     }
 
     private Thead thead;
-
     private Tbody tbody;
-
     private Tr currentHeaderRow;
-
     private Tr currentBodyRow;
-
     private boolean even;
-
     private int rowSize;
-
     private int rowCounter;
 
     /**
@@ -69,9 +67,16 @@ public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrd
     }
 
     protected void clear() {
+        clearHeader();
+        clearBody();
+    }
+
+    protected void clearHeader() {
         thead.removeAll();
         currentHeaderRow = null;
+    }
 
+    protected void clearBody() {
         tbody.removeAll();
         currentBodyRow = null;
     }
@@ -88,11 +93,11 @@ public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrd
         return addHeader(header, rowSpan, colspan, false);
     }
 
-    protected Table addCell(String value, RowSpan rowSpan, ColSpan colspan, boolean lastCell) {
-        return addCell(new Text(value), rowSpan, colspan, lastCell);
+    protected Table addCell(String value, boolean grow, RowSpan rowSpan, ColSpan colspan, CellClass cellClass, boolean lastCell) {
+        return addCell(new Text(value), grow, rowSpan, colspan, cellClass, lastCell);
     }
 
-    protected Table addCell(Component value, RowSpan rowSpan, ColSpan colspan, boolean lastCell) {
+    protected Table addCell(Component value, boolean grow, RowSpan rowSpan, ColSpan colspan, CellClass cellClass, boolean lastCell) {
         if (Objects.isNull(currentBodyRow)) {
             currentBodyRow = new Tr();
             if (rowSize == 0) {
@@ -103,7 +108,10 @@ public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrd
             }
             tbody.add(currentBodyRow);
         }
-        var cell = new Td();
+        var cell = new Td(grow);
+        if (cellClass != CellClass.DEFAULT) {
+            cell.addClassName(cellClass.name().toLowerCase());
+        }
         cell.add(value);
         colspan.apply(cell);
         rowSpan.apply(cell);
@@ -120,28 +128,60 @@ public class Table extends HtmlContainer implements ClickNotifier<Table>, HasOrd
         return this;
     }
 
+    protected Table addCell(Component value, RowSpan rowSpan, boolean lastCell) {
+        return addCell(value, false, rowSpan, colspan(1), CellClass.DEFAULT, lastCell);
+    }
+
+    protected Table addCell(Component value, RowSpan rowSpan, CellClass cellClass, boolean lastCell) {
+        return addCell(value, false, rowSpan, colspan(1), cellClass, lastCell);
+    }
+
+    protected Table addCell(String value, RowSpan rowSpan, boolean lastCell) {
+        return addCell(value, false, rowSpan, colspan(1), CellClass.DEFAULT, lastCell);
+    }
+
     protected Table addCell(String value, RowSpan rowSpan, ColSpan colspan) {
-        return addCell(value, rowSpan, colspan, false);
+        return addCell(value, false, rowSpan, colspan, CellClass.DEFAULT, false);
     }
 
     protected Table addCell(String value) {
-        return addCell(value, rowSpan(1), colspan(1), false);
+        return addCell(value, false, rowSpan(1), colspan(1), CellClass.DEFAULT, false);
     }
 
     protected Table addCell(Component value) {
-        return addCell(value, rowSpan(1), colspan(1), false);
+        return addCell(value, false, rowSpan(1), colspan(1), CellClass.DEFAULT, false);
+    }
+
+    protected Table addHeader(String header, RowSpan rowSpan, boolean lastCell) {
+        return addHeader(header, rowSpan, colspan(1), lastCell);
     }
 
     protected Table addCell(String value, boolean lastCell) {
-        return addCell(value, rowSpan(1), colspan(1), lastCell);
+        return addCell(value, false, rowSpan(1), colspan(1), CellClass.DEFAULT, lastCell);
+    }
+
+    protected Table addCell(String value, CellClass cellClass, boolean lastCell) {
+        return addCell(value, false, rowSpan(1), colspan(1), cellClass, lastCell);
+    }
+
+    protected Table addCell(String value, CellClass cellClass) {
+        return addCell(value, false, rowSpan(1), colspan(1), cellClass, false);
     }
 
     protected Table addCell(Component value, boolean lastCell) {
-        return addCell(value, rowSpan(1), colspan(1), lastCell);
+        return addCell(value, false, rowSpan(1), colspan(1), CellClass.DEFAULT, lastCell);
     }
 
     protected Table addCell(String value, RowSpan rowSpan) {
-        return addCell(value, rowSpan, colspan(1), false);
+        return addCell(value, false, rowSpan, colspan(1), CellClass.DEFAULT, false);
+    }
+
+    protected Table addCell(String value, RowSpan rowSpan, CellClass cellClass) {
+        return addCell(value, false, rowSpan, colspan(1), cellClass, false);
+    }
+
+    protected Table addCell(String value, boolean grow, RowSpan rowSpan) {
+        return addCell(value, grow, rowSpan, colspan(1), CellClass.DEFAULT, false);
     }
 
     protected Table addHeader(String header, RowSpan rowSpan, ColSpan colspan, boolean lastCell) {

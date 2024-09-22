@@ -13,10 +13,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
 import io.vepo.maestro.kafka.manager.components.MaestroScreen;
-import io.vepo.maestro.kafka.manager.components.html.EntityTable;
+import io.vepo.maestro.kafka.manager.components.TopicTable;
 import io.vepo.maestro.kafka.manager.dialogs.CreateTopicDialog;
 import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
-import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService.KafkaTopic;
 import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
 import io.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
 import jakarta.inject.Inject;
@@ -47,7 +46,22 @@ public class KafkaTopicView extends MaestroScreen {
     private Component build(Long clusterId) {
         try {
             var topics = adminService.listTopics();
-            var topicsTable = new EntityTable<KafkaTopic>(topics);
+            var topicsTable = new TopicTable(topics, (topic, table) -> {
+                var btnDelete = new Button("Delete", evnt -> {
+                    try {
+                        adminService.deleteTopic(topic.name());
+                        table.update(adminService.listTopics());
+                    } catch (KafkaUnavailableException kue) {
+                        logger.warn("Kafka Cluster is not available!", kue);
+                    } catch (KafkaUnexpectedException kue) {
+                        logger.error("Kafka Cluster is not good...", kue);
+                    }
+                });
+                var btnListen = new Button("Listen", evnt -> {
+                    getUI().ifPresent(ui -> ui.navigate("kafka/" + clusterId + "/topics/" + topic.name()));
+                });
+                return new HorizontalLayout(btnDelete, btnListen);
+            });
 
             var buttons = new HorizontalLayout();
             var createTopicDialog = new CreateTopicDialog(command -> {
@@ -63,37 +77,15 @@ public class KafkaTopicView extends MaestroScreen {
             });
             buttons.add(createTopicDialog);
             buttons.add(new Button("Create", evnt -> createTopicDialog.open()));
-            topicsTable.addColumn("ID")
-                       .withValue(KafkaTopic::id)
-                       .build()
-                       .addColumn("Topic")
-                       .withValue(KafkaTopic::name)
-                       .build()
-                       .addColumn("Partitions")
-                       .withValue(t -> Integer.toString(t.partitions()))
-                       .build()
-                       .addColumn("Replicas")
-                       .withValue(t -> Integer.toString(t.replicas()))
-                       .build()
-                       .addColumn("Actions")
-                       .withComponent(t -> {
-                           var btnDelete = new Button("Delete", evnt -> {
-                               try {
-                                   adminService.deleteTopic(t.name());
-                                   topicsTable.update(adminService.listTopics());
-                               } catch (KafkaUnavailableException kue) {
-                                   logger.warn("Kafka Cluster is not available!", kue);
-                               } catch (KafkaUnexpectedException kue) {
-                                   logger.error("Kafka Cluster is not good...", kue);
-                               }
-                           });
-                           var btnListen = new Button("Listen", evnt -> {
-                               getUI().ifPresent(ui -> ui.navigate("kafka/" + clusterId + "/topics/" + t.name()));
-                           });
-                           return new HorizontalLayout(btnDelete, btnListen);
-                       })
-                       .build()
-                       .bind();
+            buttons.add(new Button("Refresh", evnt -> {
+                try {
+                    topicsTable.update(adminService.listTopics());
+                } catch (KafkaUnavailableException kue) {
+                    logger.warn("Kafka Cluster is not available!", kue);
+                } catch (KafkaUnexpectedException kue) {
+                    logger.error("Kafka Cluster is not good...", kue);
+                }
+            }));
             return new VerticalLayout(buttons, topicsTable);
         } catch (KafkaUnavailableException kue) {
             logger.warn("Kafka Cluster is not available!", kue);

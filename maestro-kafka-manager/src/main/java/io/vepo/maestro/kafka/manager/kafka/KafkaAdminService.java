@@ -19,6 +19,7 @@ import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.GroupType;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +51,16 @@ public class KafkaAdminService {
         }
     }
 
-    public record KafkaTopic(String id, String name, int partitions, int replicas, boolean internal) {
+    public record KafkaPartition(int id, Integer leader, List<Integer> replicas, List<Integer> isr) {
+
+        public KafkaPartition(TopicPartitionInfo partition) {
+            this(partition.partition(), partition.leader().id(), partition.replicas().stream().map(Node::id).toList(), partition.isr().stream().map(Node::id).toList());
+        }
+    }
+
+    public record KafkaTopic(String id, String name, int replicas, List<KafkaPartition> partitions, boolean internal) {
         public KafkaTopic(TopicListing topic, TopicDescription description) {
-            this(topic.topicId().toString(), topic.name(), description.partitions().size(), description.partitions().get(0).replicas().size(), topic.isInternal());
+            this(topic.topicId().toString(), topic.name(), description.partitions().get(0).replicas().size(), description.partitions().stream().map(KafkaPartition::new).toList(), topic.isInternal());
         }
     }
 
