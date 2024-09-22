@@ -3,7 +3,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.vepo.maestro</groupId>
+  <groupId>dev.vepo.maestro</groupId>
   <artifactId>parent-maestro</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
@@ -60,4 +60,18 @@
     <module>maestro-kafka-manager</module>
     <module>framework</module>
   </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.5.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+          <autoPublish>true</autoPublish>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
