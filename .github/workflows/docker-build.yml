@@ -21,9 +21,15 @@ jobs:
         distribution: 'temurin'
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
+    - name: Set Release version env variable
+      run: |
+        echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
     - name: Install all the dependencies
       run: mvn clean install
-    - name: Build Docker image
+    - name: Build Production Delivery
       working-directory: ./maestro-kafka-manager
       run: mvn clean package -Pproduction
+    - name: Build Docker image
+      working-directory: ./maestro-kafka-manager
+      run: "docker build -t vepo:maestro-kafka-manager:${{ env.RELEASE_VERSION }} .
 
