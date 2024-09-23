@@ -15,6 +15,9 @@ import org.apache.avro.reflect.ReflectDatumWriter;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.serialization.Serializer;
 
+/**
+ * The Avro Serializer allows sending AVRO messages to Kafka.
+ */
 public class AvroSerializer implements Serializer<Object> {
     private Map<String, GenericDatumWriter<Object>> writerCache = new HashMap<>();
     private Map<String, Schema> schemaCache = new HashMap<>();

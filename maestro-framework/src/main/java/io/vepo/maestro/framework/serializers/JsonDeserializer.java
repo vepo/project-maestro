@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.vepo.maestro.framework.utils.Topics;
 
+/**
+ * The JsonDeserializer allows receiving JSON messages from Kafka.
+ */
 public class JsonDeserializer<T> implements Deserializer<T> {
     private ObjectMapper mapper;
     private Class<T> type;
@@ -29,7 +32,7 @@ public class JsonDeserializer<T> implements Deserializer<T> {
     public T deserialize(String topic, byte[] data) {
         try {
             var dataType = Stream.of(type.getDeclaredMethods())
-                                 .filter(m -> Topics. match(topic, m))
+                                 .filter(m -> Topics.match(topic, m))
                                  .findFirst()
                                  .map(m -> m.getParameterTypes()[0])
                                  .orElseThrow(() -> new KafkaException("Method not found"));

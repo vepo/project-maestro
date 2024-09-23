@@ -8,7 +8,7 @@ import org.jboss.weld.exceptions.IllegalStateException;
  * A MaestroApplication is a CDI Application that requires
  * a <code>META-INF/beans.xml</code> file.
  * 
- * @see https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application
+ * @see <a href="https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application">Configuring a CDI Application</a>
  */
 public class StartupException extends IllegalStateException {
 

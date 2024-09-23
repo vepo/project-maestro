@@ -22,6 +22,9 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 import io.vepo.maestro.framework.utils.Topics;
 
+/**
+ * The Avro Deserializer allows receiving AVRO messages from Kafka.
+ */
 public class AvroDeserializer implements Deserializer<Object> {
 
     private static Object instantiate(Constructor<?> constructor, GenericRecord data) {

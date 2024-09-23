@@ -7,6 +7,9 @@ import org.apache.kafka.common.serialization.Serializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * The JsonSerializer allows sending JSON messages to Kafka.
+ */
 public class JsonSerializer<T> implements Serializer<T> {
 
     private ObjectMapper mapper;
@@ -14,7 +17,7 @@ public class JsonSerializer<T> implements Serializer<T> {
     public void configure(Map<String, ?> configs, boolean isKey) {
         this.mapper = new ObjectMapper();
     }
-
+    
     @Override
     public byte[] serialize(String topic, T data) {
         try {

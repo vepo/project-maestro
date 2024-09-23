@@ -50,7 +50,7 @@ public class MaestroApplication implements AutoCloseable {
      * Runs the application with self-discovery enabled. This is a CDI application,
      * which requires a META-INF/beans.xml file in your project.
      * 
-     * @see https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application
+     * @see <a href="https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application">Configuring a CDI Application</a>
      */
     public static void runApplication() {
         try (var app = new MaestroApplication()) {
