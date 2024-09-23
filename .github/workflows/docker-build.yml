@@ -32,5 +32,5 @@ jobs:
       run: mvn clean package -Pproduction
     - name: Build Docker image
       working-directory: ./maestro-kafka-manager
-      run: "docker build -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
+      run: "docker build -f src/main/docker/Dockerfile.jvm -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
 
