@@ -21,6 +21,9 @@
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <sonar.organization>vepo-github</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
 
   <licenses>
@@ -118,25 +121,25 @@
         <artifactId>testcontainers</artifactId>
         <version>1.20.1</version>
         <scope>test</scope>
-    </dependency>
-    <dependency>
+      </dependency>
+      <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>junit-jupiter</artifactId>
         <version>1.20.1</version>
         <scope>test</scope>
-    </dependency>
-    <dependency>
+      </dependency>
+      <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>kafka</artifactId>
         <version>1.20.1</version>
         <scope>test</scope>
-    </dependency>
-    <dependency>
+      </dependency>
+      <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
         <version>1.5.8</version>
         <scope>test</scope>
-    </dependency>
+      </dependency>
       <!-- [END] Test dependencies -->
     </dependencies>
   </dependencyManagement>
