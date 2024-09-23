@@ -35,7 +35,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-quarkus-extension</artifactId>
-            <version>24.4.7</version>
+            <version>24.4.8</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -48,6 +48,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-docker</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
