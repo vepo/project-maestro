@@ -8,9 +8,20 @@
         <version>0.0.3-SNAPSHOT</version>
     </parent>
     <artifactId>maestro-framework</artifactId>
-    <name>Maestro :: Frameowrk</name>
-    <description>Maestro Kafka Manager</description>
+    <name>Maestro :: Framework</name>
     <packaging>jar</packaging>
+
+    <url>https://blog.vepo.dev/</url>
+    <description>
+        The Maestro Framework allows implementing Kafka Clients ealy.
+    </description>
+
+    <scm>
+      <connection>scm:git:git://github.com/vepo/project-maestro.git</connection>
+      <developerConnection>scm:git:git@github.com:vepo/project-maestro.git</developerConnection>
+      <url>https://github.com/vepo/project-maestro</url>
+      <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
     </dependencyManagement>

@@ -8,9 +8,20 @@
         <version>0.0.3-SNAPSHOT</version>
     </parent>
     <artifactId>maestro-kafka-manager</artifactId>
-    <name>Maestro :: Kafka Manager</name>
-    <description>Maestro Kafka Manager</description>
     <packaging>jar</packaging>
+    
+    <name>Maestro :: Kafka Manager</name>
+    <url>https://blog.vepo.dev/</url>
+    <description>
+        The Maestro Kafka Manager allows monitory and configure Kafka Clusters.
+    </description>
+
+    <scm>
+        <connection>scm:git:git://github.com/vepo/project-maestro.git</connection>
+        <developerConnection>scm:git:git@github.com:vepo/project-maestro.git</developerConnection>
+        <url>https://github.com/vepo/project-maestro</url>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
