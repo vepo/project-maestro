@@ -17,8 +17,7 @@
   <properties>
     <vaadin.version>24.4.7</vaadin.version>
     <compiler-plugin.version>3.13.0</compiler-plugin.version>
-    <quarkus.platform.version>3.13.0</quarkus.platform.version>
-    <quarkus.plugin.version>3.13.0</quarkus.plugin.version>
+    <quarkus.platform.version>3.13.3</quarkus.platform.version>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
