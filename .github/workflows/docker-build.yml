@@ -3,7 +3,7 @@ name: Docker Build
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Release Version"]
+    workflows: ["Maven Package"]
     types:
       - completed
 
