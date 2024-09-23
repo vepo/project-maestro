@@ -19,6 +19,7 @@ jobs:
       with:
         java-version: '21'
         distribution: 'temurin'
+        cache: maven
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
     - name: Set Release version env variable
@@ -31,5 +32,5 @@ jobs:
       run: mvn clean package -Pproduction
     - name: Build Docker image
       working-directory: ./maestro-kafka-manager
-      run: "docker build -t vepo:maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
+      run: "docker build -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
 
