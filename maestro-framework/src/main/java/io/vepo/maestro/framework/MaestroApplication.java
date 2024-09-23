@@ -20,16 +20,46 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.vepo.maestro.framework.annotations.MaestroConsumer;
+import io.vepo.maestro.framework.exceptions.StartupException;
 import io.vepo.maestro.framework.parallel.WorkerThreadFactory;
 import io.vepo.maestro.framework.utils.Topics;
 import jakarta.enterprise.inject.se.SeContainer;
 import jakarta.enterprise.inject.se.SeContainerInitializer;
 import jakarta.enterprise.inject.spi.Bean;
 
+/**
+ * Starts the Maestro Application.
+ */
 public class MaestroApplication implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(MaestroApplication.class.getName());
 
+    /**
+     * Runs the application with the given class.
+     * 
+     * @param applicationClass the class to start the application. It should contain
+     *                         the main configuration for Maestro and will load all
+     *                         classes annotated with @MaestroConsumer.
+     */
+    public static void runApplication(Class<?> applicationClass) {
+        try (var app = new MaestroApplication()) {
+            app.run(applicationClass);
+        }
+    }
+
+    /**
+     * Runs the application with self-discovery enabled. This is a CDI application,
+     * which requires a META-INF/beans.xml file in your project.
+     * 
+     * @see https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application
+     */
+    public static void runApplication() {
+        try (var app = new MaestroApplication()) {
+            app.run();
+        }
+    }
+
     private SeContainer container;
+
     private final List<ExecutorService> loadedExecutors;
 
     private final AtomicBoolean running;
@@ -41,13 +71,36 @@ public class MaestroApplication implements AutoCloseable {
 
     public void run() {
         var initializer = SeContainerInitializer.newInstance();
-        container = initializer.initialize();
-        start(null);
+        try {
+            container = initializer.initialize();
+            start(null);
+        } catch (IllegalStateException ise) {
+            if (ise.getMessage().startsWith("WELD-ENV-000016:")) {
+                logger.error("No beans.xml found. Please, create a META-INF/beans.xml file in your project.");
+                throw new StartupException("""
+                                           Maestro requires a CDI application. Start your application with a class parameter or create a META-INF/beans.xml file in your project.
+                                           Reference: https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application
+                                           """);
+            } else {
+                throw new StartupException("Unknow error starting the application", ise);
+            }
+        }
     }
 
     public void run(Class<?> applicationClass) {
         var initializer = SeContainerInitializer.newInstance();
-        container = initializer.initialize();
+        try {
+            container = initializer.addPackages(true, applicationClass.getPackage())
+                                   .initialize();
+        } catch (IllegalStateException ise) {
+            if (ise.getMessage().startsWith("WELD-ENV-000016:")) {
+                container = initializer.disableDiscovery()
+                                       .addPackages(true, applicationClass.getPackage())
+                                       .setClassLoader(applicationClass.getClassLoader()).initialize();
+            } else {
+                throw new StartupException("Unknow error starting the application", ise);
+            }
+        }
         start(applicationClass);
     }
 
@@ -67,11 +120,13 @@ public class MaestroApplication implements AutoCloseable {
                                  .filter(b -> applicationClass == null || b.getBeanClass().getPackageName().contains(applicationClass.getPackageName()))
                                  .filter(b -> b.getBeanClass().isAnnotationPresent(MaestroConsumer.class))
                                  .toList();
-
-        var threadPoll = newFixedThreadPool(consumers.size(), new WorkerThreadFactory("consumers"));
-        loadedExecutors.add(threadPoll);
-        consumers.stream()
-                 .forEach(consumer -> threadPoll.submit(() -> consume(consumer)));
+        logger.debug("Found consumers: {}", consumers);
+        if (!consumers.isEmpty()) {
+            var threadPoll = newFixedThreadPool(consumers.size(), new WorkerThreadFactory("consumers"));
+            loadedExecutors.add(threadPoll);
+            consumers.stream()
+                     .forEach(consumer -> threadPoll.submit(() -> consume(consumer)));
+        }
     }
 
     private void consume(Bean<?> consumerBean) {
