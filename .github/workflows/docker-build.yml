@@ -34,7 +34,7 @@ jobs:
       working-directory: ./maestro-kafka-manager
       run: "docker build -f src/main/docker/Dockerfile.jvm -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
     - name: Docker loging
-      run: docker login -u ${{ vars.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
     - name: Docker push
       run: docker push vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }}
 
