@@ -238,14 +238,26 @@
         </configuration>
         <executions>
           <execution>
-            <id>agent</id>
+            <id>prepare-agent</id>
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <append>true</append>
+            </configuration>
+          </execution>
+          <execution>
+            <id>prepare-agent-integration</id>
+            <goals>
+              <goal>prepare-agent-integration</goal>
+            </goals>
+            <configuration>
+              <append>true</append>
+            </configuration>
           </execution>
           <execution>
             <id>jacoco-site</id>
-            <phase>package</phase>
+            <phase>verify</phase>
             <goals>
               <goal>report</goal>
             </goals>

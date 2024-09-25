@@ -25,7 +25,7 @@ import io.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
 import io.vepo.maestro.kafka.manager.kafka.TopicConsumer;
 import jakarta.inject.Inject;
 
-@Route("kafka/:clusterId([1-9][0-9]*)/topics/:topicName([a-zA-Z0-9\\-\\_]+)")
+@Route("kafka/:clusterId([1-9][0-9]*)/topics/:topicName([a-zA-Z0-9\\-\\_\\.]+)")
 public class ListenKafkaTopicView extends MaestroScreen implements BeforeLeaveObserver {
 
     public record Message(String key, String value, long offset, int partition, long timestamp) {
