@@ -29,8 +29,12 @@ import jakarta.inject.Inject;
 public class KafkaTopicView extends MaestroScreen {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTopicView.class);
 
+    private KafkaAdminService adminService;
+
     @Inject
-    KafkaAdminService adminService;
+    public KafkaTopicView(KafkaAdminService adminService) {
+        this.adminService = adminService;
+    }
 
     @Override
     protected String getTitle() {

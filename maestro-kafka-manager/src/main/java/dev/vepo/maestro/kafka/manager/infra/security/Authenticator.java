@@ -15,8 +15,12 @@ import jakarta.servlet.ServletException;
 @ApplicationScoped
 public class Authenticator {
 
+    private Instance<SecurityIdentitySupplier> identitySupplierInstance;
+
     @Inject
-    Instance<SecurityIdentitySupplier> identitySupplierInstance;
+    public Authenticator(Instance<SecurityIdentitySupplier> identitySupplierInstance) {
+        this.identitySupplierInstance = identitySupplierInstance;
+    }
 
     public void logout() {
         UI.getCurrent().navigate(LoginView.class);

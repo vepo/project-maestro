@@ -20,8 +20,12 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class KafkaManagerIdentityProvider implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
+    private UserRepository userRepository;
+
     @Inject
-    UserRepository userRepository;
+    public KafkaManagerIdentityProvider(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public Class<UsernamePasswordAuthenticationRequest> getRequestType() {

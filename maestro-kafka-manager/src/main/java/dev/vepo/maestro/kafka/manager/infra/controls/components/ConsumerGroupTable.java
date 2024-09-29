@@ -6,7 +6,7 @@ import dev.vepo.maestro.kafka.manager.infra.controls.html.Table;
 import dev.vepo.maestro.kafka.manager.kafka.KafkaAdminService.ConsumerGroup;
 
 public class ConsumerGroupTable extends Table {
-    public ConsumerGroupTable(List<ConsumerGroup> list) {
+    public ConsumerGroupTable(List<ConsumerGroup> consumers) {
         super();
         addHeader("ID", rowSpan(2));
         addHeader("Type", rowSpan(2));
@@ -18,18 +18,28 @@ public class ConsumerGroupTable extends Table {
         addHeader("Host");
         addHeader("Assignment");
 
-        list.forEach(c -> {
-            addCell(c.id(), rowSpan(c.members().size()));
-            addCell(c.type(), rowSpan(c.members().size()));
-            addCell(c.state(), rowSpan(c.members().size()));
-            addCell(c.coordinator(), rowSpan(c.members().size()));
-            c.members().forEach(m -> {
-                addCell(m.consumerId());
-                addCell(m.clientId());
-                addCell(m.host());
-                addCell(m.assignment().toString(), true);
-            });
+        consumers.forEach(c -> {
+            var rowSpan = rowSpan(Math.max(1, c.members().size()));
+
+            addCell(c.id(), rowSpan);
+            addCell(c.type(), rowSpan);
+            addCell(c.state(), rowSpan);
+            addCell(c.coordinator(), rowSpan);
+            if (c.members().isEmpty()) {
+                addCell("N/A");
+                addCell("N/A");
+                addCell("N/A");
+                addCell("N/A", true);
+            } else {
+                c.members().forEach(m -> {
+                    addCell(m.consumerId());
+                    addCell(m.clientId());
+                    addCell(m.host());
+                    addCell(m.assignment().toString(), true);
+                });
+            }
         });
+
     }
 
 }

@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.ClusterSelector;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
-import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -134,10 +133,19 @@ public class KafkaAdminService {
         }
     }
 
-    @Inject
-    ClusterSelector clusterSelector;
+    private final Optional<AdminClient> client;
 
-    private Optional<AdminClient> client;
+    @Inject
+    public KafkaAdminService(ClusterSelector clusterSelector) {
+        client = clusterSelector.getSelectedCluster()
+                                .map(cluster -> {
+                                    var adminProperties = new Properties();
+                                    adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
+                                    // adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
+                                    // adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
+                                    return AdminClient.create(adminProperties);
+                                });
+    }
 
     public List<KafkaTopic> listTopics() throws KafkaUnexpectedException {
         var topics = client.map(KafkaAdminService::listTopicsInternal)
@@ -206,18 +214,6 @@ public class KafkaAdminService {
                 LOGGER.error("Could not create topic {}", command, e);
             }
         });
-    }
-
-    @PostConstruct
-    void setup() {
-        client = clusterSelector.getSelectedCluster()
-                                .map(cluster -> {
-                                    var adminProperties = new Properties();
-                                    adminProperties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
-                                    // adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
-                                    // adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
-                                    return AdminClient.create(adminProperties);
-                                });
     }
 
     @PreDestroy

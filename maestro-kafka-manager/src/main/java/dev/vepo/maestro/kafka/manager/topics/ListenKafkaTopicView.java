@@ -22,7 +22,6 @@ import dev.vepo.maestro.kafka.manager.infra.security.Roles;
 import dev.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
 import dev.vepo.maestro.kafka.manager.kafka.TopicConsumer;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 
 @RolesAllowed({
     Roles.USER,
@@ -33,10 +32,25 @@ public class ListenKafkaTopicView extends MaestroScreen implements BeforeLeaveOb
     public record Message(String key, String value, long offset, int partition, long timestamp) {
     }
 
-    @Inject
-    KafkaAdminService adminService;
+    private static String serializer(String serializer) {
+        return switch (serializer) {
+            case "StringSerializer" -> "org.apache.kafka.common.serialization.StringDeserializer";
+            case "LongSerializer" -> "org.apache.kafka.common.serialization.LongDeserializer";
+            case "IntegerSerializer" -> "org.apache.kafka.common.serialization.IntegerDeserializer";
+            case "DoubleSerializer" -> "org.apache.kafka.common.serialization.DoubleDeserializer";
+            case "FloatSerializer" -> "org.apache.kafka.common.serialization.FloatDeserializer";
+            case "ByteArraySerializer" -> "org.apache.kafka.common.serialization.ByteArrayDeserializer";
+            case "AvroSerializer" -> "io.confluent.kafka.serializers.KafkaAvroDeserializer";
+            case "ProtobufSerializer" -> "io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer";
+            default -> throw new IllegalArgumentException("Serializer not supported: " + serializer);
+        };
+    }
 
-    private AtomicReference<TopicConsumer> consumer = new AtomicReference<>();
+    private AtomicReference<TopicConsumer> consumer;
+
+    public ListenKafkaTopicView(KafkaAdminService adminService) {
+        this.consumer = new AtomicReference<>();
+    }
 
     @Override
     public void beforeLeave(BeforeLeaveEvent event) {
@@ -150,20 +164,6 @@ public class ListenKafkaTopicView extends MaestroScreen implements BeforeLeaveOb
             }
             return null;
         });
-    }
-
-    private String serializer(String serializer) {
-        return switch (serializer) {
-            case "StringSerializer" -> "org.apache.kafka.common.serialization.StringDeserializer";
-            case "LongSerializer" -> "org.apache.kafka.common.serialization.LongDeserializer";
-            case "IntegerSerializer" -> "org.apache.kafka.common.serialization.IntegerDeserializer";
-            case "DoubleSerializer" -> "org.apache.kafka.common.serialization.DoubleDeserializer";
-            case "FloatSerializer" -> "org.apache.kafka.common.serialization.FloatDeserializer";
-            case "ByteArraySerializer" -> "org.apache.kafka.common.serialization.ByteArrayDeserializer";
-            case "AvroSerializer" -> "io.confluent.kafka.serializers.KafkaAvroDeserializer";
-            case "ProtobufSerializer" -> "io.confluent.kafka.serializers.protobuf.KafkaProtobufDeserializer";
-            default -> throw new IllegalArgumentException("Serializer not supported: " + serializer);
-        };
     }
 
 }

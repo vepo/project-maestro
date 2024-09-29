@@ -14,9 +14,12 @@ import jakarta.inject.Inject;
 class SecurityIdentitySupplier implements Supplier<SecurityIdentity> {
 
     private SecurityIdentity identity;
+    private UserRepository userRepository;
 
     @Inject
-    UserRepository userRepository;
+    SecurityIdentitySupplier(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     @ActivateRequestContext
