@@ -50,7 +50,9 @@ public class MaestroApplication implements AutoCloseable {
      * Runs the application with self-discovery enabled. This is a CDI application,
      * which requires a META-INF/beans.xml file in your project.
      * 
-     * @see <a href="https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application">Configuring a CDI Application</a>
+     * @see <a href=
+     *      "https://jakarta.ee/learn/docs/jakartaee-tutorial/current/cdi/cdi-basic/cdi-basic.html#_configuring_a_cdi_application">Configuring
+     *      a CDI Application</a>
      */
     public static void runApplication() {
         try (var app = new MaestroApplication()) {
@@ -131,14 +133,14 @@ public class MaestroApplication implements AutoCloseable {
 
     private void consume(Bean<?> consumerBean) {
         try {
-            logger.info("Starting consumer: {}", consumerBean);
+            logger.info("Starting consumer: {}", consumerBean.getBeanClass().getName());
 
             System.getProperties().entrySet().forEach(entry -> logger.info("Value {}={}", entry.getKey(), entry.getValue()));
             var bootstrapServer = ConfigProvider.getConfig()
-                                                 .getOptionalValue(String.format("%s.kafka.bootstrap.server", consumerBean.getBeanClass().getName()), String.class)
-                                                 .or(() -> ConfigProvider.getConfig()
-                                                                         .getOptionalValue("kafka.bootstrap.server", String.class))
-                                                 .orElseThrow(() -> new IllegalArgumentException("Kafka bootstrap server not found"));
+                                                .getOptionalValue(String.format("%s.kafka.%s", consumerBean.getBeanClass().getName(), ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG), String.class)
+                                                .or(() -> ConfigProvider.getConfig()
+                                                                        .getOptionalValue(String.format("kafka.%s", ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG), String.class))
+                                                .orElseThrow(() -> new IllegalArgumentException("Kafka bootstrap server not found"));
 
             logger.info("Kafka bootstrap server found: {}", bootstrapServer);
             var configs = new Properties();
