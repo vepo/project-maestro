@@ -9,7 +9,7 @@
     </parent>
     <artifactId>maestro-kafka-manager</artifactId>
     <packaging>jar</packaging>
-    
+
     <name>Maestro :: Kafka Manager</name>
     <url>https://blog.vepo.dev/</url>
     <description>
@@ -46,7 +46,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin-quarkus-extension</artifactId>
-            <version>24.4.8</version>
+            <version>${vaadin.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -54,7 +54,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+            <artifactId>quarkus-hibernate-orm</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -75,6 +79,28 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-quarkus</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.15.0</version>
+        </dependency>
+
+        <!-- Tests -->
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-testbench-unit-quarkus</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>

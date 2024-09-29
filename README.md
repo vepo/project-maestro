@@ -47,7 +47,7 @@ Project Maestro is a comprehensive tool designed to manage Apache Kafka deployme
 Project Maestro requires a configuration file to connect to your Kafka cluster. Create a `config.properties` file in the root directory with the following content:
 
 ```properties
-kafka.bootstrap.servers=localhost:9092
+kafka.bootstrap.server=localhost:9092
 kafka.security.protocol=SSL
 kafka.ssl.truststore.location=/path/to/truststore.jks
 kafka.ssl.truststore.password=yourpassword

@@ -1,1 +1,2 @@
-INSERT INTO cluster (id, name, bootstrapServers) VALUES (nextval('cluster_id_seq'), 'Main Cluster', 'kafka-0:9092, kafka-1:9094, kafka-2:9096');
+INSERT INTO tbl_clusters (name, bootstrap_servers, created_at, updated_at) VALUES ('Main Cluster', 'kafka-0:9092, kafka-1:9094, kafka-2:9096', NOW(), NOW());
+INSERT INTO tbl_users (username, email, password, role, created_at, updated_at) VALUES ('admin', 'admin@maestro.dev', '$2a$10$JQjLXQ.PBxeqfl2XiF/Voe2x33E4SpI4ln5qF2FzR1HojEQho5ilC', 'ADMIN', NOW(), NOW());

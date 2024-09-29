@@ -29,6 +29,7 @@ public class JsonDeserializer<T> implements Deserializer<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T deserialize(String topic, byte[] data) {
         try {
             var dataType = Stream.of(type.getDeclaredMethods())

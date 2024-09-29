@@ -134,15 +134,15 @@ public class MaestroApplication implements AutoCloseable {
             logger.info("Starting consumer: {}", consumerBean);
 
             System.getProperties().entrySet().forEach(entry -> logger.info("Value {}={}", entry.getKey(), entry.getValue()));
-            var bootstrapServers = ConfigProvider.getConfig()
-                                                 .getOptionalValue(String.format("%s.kafka.bootstrap.servers", consumerBean.getBeanClass().getName()), String.class)
+            var bootstrapServer = ConfigProvider.getConfig()
+                                                 .getOptionalValue(String.format("%s.kafka.bootstrap.server", consumerBean.getBeanClass().getName()), String.class)
                                                  .or(() -> ConfigProvider.getConfig()
-                                                                         .getOptionalValue("kafka.bootstrap.servers", String.class))
-                                                 .orElseThrow(() -> new IllegalArgumentException("Kafka bootstrap servers not found"));
+                                                                         .getOptionalValue("kafka.bootstrap.server", String.class))
+                                                 .orElseThrow(() -> new IllegalArgumentException("Kafka bootstrap server not found"));
 
-            logger.info("Kafka bootstrap servers found: {}", bootstrapServers);
+            logger.info("Kafka bootstrap server found: {}", bootstrapServer);
             var configs = new Properties();
-            configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+            configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
             configs.put(ConsumerConfig.GROUP_ID_CONFIG, consumerBean.getBeanClass().getName());
             configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, consumerBean.getBeanClass()
                                                                                   .getAnnotation(MaestroConsumer.class)

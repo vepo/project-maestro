@@ -141,7 +141,7 @@ public class YahooProducer {
                         var jsonData = JsonFormat.printer().print(data);JsonFormat.printer().print(data);
                         logger.info("Sending data={}", jsonData);
                         var record = new ProducerRecord<String, String>("currence.exchange.prices", 
-                                                                        String.format("%s-%s", data.getFromcurrency(), data.getCurrency()), 
+                                                                        data.getId(), 
                                                                         jsonData);
                         var metadata = producer.send(record).get();
                         logger.info("Record sent to partition {} with offset {}", metadata.partition(), metadata.offset());

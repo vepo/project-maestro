@@ -16,6 +16,7 @@ import io.vepo.maestro.framework.serializers.JsonDeserializer;
     METHOD,
     TYPE })
 @Retention(RUNTIME)
+@SuppressWarnings("rawtypes")
 public @interface MaestroConsumer {
     public static Class<? extends Deserializer> DEFAULT_DESERIALIZER = JsonDeserializer.class;
 
