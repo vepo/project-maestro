@@ -8,9 +8,11 @@ import java.util.Optional;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -18,6 +20,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import dev.vepo.maestro.kafka.manager.infra.security.Authenticator;
 import dev.vepo.maestro.kafka.manager.model.Cluster;
 import dev.vepo.maestro.kafka.manager.model.ClusterRepository;
 import jakarta.annotation.PostConstruct;
@@ -38,6 +41,9 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     @Inject
     SecurityIdentity identity;
 
+    @Inject
+    Authenticator authenticator;
+
     @PostConstruct
     protected void setup() {
         setPrimarySection(Section.DRAWER);
@@ -52,8 +58,16 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
         appName.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
                               LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD,
                               LumoUtility.Height.XLARGE, LumoUtility.Padding.Horizontal.MEDIUM);
-
-        addToDrawer(appName, menu);
+        var clusterSwitch = new ClusterSwitch(clusterSelector.getSelected(),
+                                              clusterRepository.findAll(),
+                                              cluster -> {
+                                                  clusterSelector.select(cluster.getId());
+                                                  menu.updateSelectedCluster(Optional.of(cluster.getId()));
+                                              });
+        addToDrawer(appName,
+                    new VerticalLayout(clusterSwitch),
+                    menu,
+                    new VerticalLayout(new Button("Logout", e -> authenticator.logout())));
 
     }
 

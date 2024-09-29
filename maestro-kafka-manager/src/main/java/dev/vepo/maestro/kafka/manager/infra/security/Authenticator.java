@@ -5,17 +5,18 @@ import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.server.VaadinSession;
 
 import dev.vepo.maestro.kafka.manager.LoginView;
+import io.agroal.api.security.NamePrincipal;
+import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Instance;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 
 @ApplicationScoped
 public class Authenticator {
 
-    // @Inject
-    // PasswordHash passwordHash;
-
-    // @Inject
-    // UserRepository userRepository;
+    @Inject
+    Instance<SecurityIdentitySupplier> identitySupplierInstance;
 
     public void logout() {
         UI.getCurrent().navigate(LoginView.class);
@@ -32,8 +33,9 @@ public class Authenticator {
         }
         try {
             request.login(username, password);
-            // change session ID to protect against session fixation
-            request.getHttpServletRequest().changeSessionId();
+
+            SecurityIdentitySupplier identitySupplier = identitySupplierInstance.get();
+            identitySupplier.setIdentity(QuarkusSecurityIdentity.builder().setPrincipal(new NamePrincipal(username)).build());
             return true;
         } catch (ServletException e) {
             // login exception handle code omitted

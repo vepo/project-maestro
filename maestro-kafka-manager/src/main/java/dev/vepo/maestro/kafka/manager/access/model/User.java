@@ -7,10 +7,7 @@ import java.util.Objects;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import io.quarkus.security.jpa.Password;
 import io.quarkus.security.jpa.Roles;
-import io.quarkus.security.jpa.UserDefinition;
-import io.quarkus.security.jpa.Username;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,25 +17,25 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tbl_users")
-@UserDefinition
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Username
     @Column(unique = true)
     private String username;
 
     @Column(unique = true)
     private String email;
 
-    @Password
     @Column(name = "password")
     private String password;
 
     @Roles
     private String role;
+
+    @Column(columnDefinition = "boolean default true")
+    private boolean active;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -57,6 +54,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.updatedAt = this.createdAt = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        this.active = true;
     }
 
     public Long getId() {
@@ -115,6 +113,15 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(id);
@@ -135,7 +142,7 @@ public class User {
 
     @Override
     public String toString() {
-        return String.format("User[id=%d, username=%s, email=%s, password=%s, createdAt=%s, updatedAt=%s]",
-                             id, username, email, password, createdAt, updatedAt);
+        return String.format("User[id=%d, username=%s, email=%s, password=%s, active=%s, createdAt=%s, updatedAt=%s]",
+                             id, username, email, password, active, createdAt, updatedAt);
     }
 }

@@ -13,6 +13,7 @@ CREATE TABLE tbl_users (
   username        VARCHAR(255) UNIQUE,
   email           VARCHAR(255) UNIQUE,
   password        VARCHAR(255),
+  active          BOOLEAN DEFAULT TRUE,
   created_at      TIMESTAMP(6) WITH TIME ZONE,
   updated_at      TIMESTAMP(6) WITH TIME ZONE,
 
