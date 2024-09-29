@@ -17,8 +17,12 @@ import jakarta.inject.Inject;
 @RolesAllowed("ADMIN")
 public class UsersView extends MaestroScreen {
 
+    private UserRepository userRepository;
+
     @Inject
-    UserRepository userRepository;
+    public UsersView(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     protected String getTitle() {

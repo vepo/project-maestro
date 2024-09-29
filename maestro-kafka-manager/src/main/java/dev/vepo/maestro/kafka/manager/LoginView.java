@@ -22,13 +22,14 @@ import jakarta.inject.Inject;
 public class LoginView extends VerticalLayout implements BeforeEnterObserver, ComponentEventListener<AbstractLogin.LoginEvent> {
     final LoginForm loginForm;
 
-    @Inject
-    Authenticator authenticator;
+    private Authenticator authenticator;
+
+    private SecurityIdentity identity;
 
     @Inject
-    SecurityIdentity identity;
-
-    public LoginView() {
+    public LoginView(Authenticator authenticator, SecurityIdentity identity) {
+        this.authenticator = authenticator;
+        this.identity = identity;
         loginForm = new LoginForm();
 
         setSizeFull();

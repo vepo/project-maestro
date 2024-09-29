@@ -16,8 +16,12 @@ public class ClusterSelector {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClusterSelector.class);
     private AtomicLong selected = new AtomicLong(-1l);
 
+    private ClusterRepository clusterRepository;
+    
     @Inject
-    ClusterRepository clusterRepository;
+    public ClusterSelector(ClusterRepository clusterRepository) {
+        this.clusterRepository = clusterRepository;
+    }
 
     public void select(Long clusterId) {
         LOGGER.info("Selecting cluster {}", clusterId);

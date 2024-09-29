@@ -23,8 +23,12 @@ import jakarta.inject.Inject;
 @Route("kafka/:clusterId([1-9][0-9]*)/consumers")
 public class KafkaConsumerView extends MaestroScreen {
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerView.class);
+    private KafkaAdminService adminService;
+
     @Inject
-    KafkaAdminService adminService;
+    public KafkaConsumerView(KafkaAdminService adminService) {
+        this.adminService = adminService;
+    }
 
     @Override
     protected String getTitle() {

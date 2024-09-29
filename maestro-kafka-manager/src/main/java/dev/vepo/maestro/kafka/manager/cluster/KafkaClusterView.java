@@ -25,8 +25,12 @@ public class KafkaClusterView extends MaestroScreen {
 
     private static final Logger logger = LoggerFactory.getLogger(KafkaClusterView.class);
 
+    private KafkaAdminService adminService;
+
     @Inject
-    KafkaAdminService adminService;
+    public KafkaClusterView(KafkaAdminService adminService) {
+        this.adminService = adminService;
+    }
 
     @Override
     protected String getTitle() {

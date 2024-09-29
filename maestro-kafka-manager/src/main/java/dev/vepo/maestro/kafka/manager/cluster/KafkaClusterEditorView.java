@@ -71,8 +71,6 @@ public class KafkaClusterEditorView extends MaestroScreen {
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaClusterEditorView.class.getName());
-
     private class EditorForm extends VerticalLayout {
         private final Binder<KafkaCluster> binder;
         private final Command focus;
@@ -117,7 +115,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                 LOGGER.info("Saving cluster {}", bean);
                 entity.setName(bean.getName());
                 entity.setBootstrapServers(bean.getBootstrapServers());
-                repository.create(entity);
+                clusterRepository.create(entity);
                 showGrid();
             });
 
@@ -129,7 +127,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                     LOGGER.error("Error saving cluster", e);
                     return;
                 }
-                repository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));
+                clusterRepository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));
                 showGrid();
             });
             updateButton.setVisible(false);
@@ -180,7 +178,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                  .withComponent(cluster -> {
                      var editButton = new Button("Edit", event -> showForm(cluster));
                      var deleteButton = new Button("Delete", event -> {
-                         repository.delete(cluster.id.get());
+                         clusterRepository.delete(cluster.id.get());
                          table.update(loadClusters());
                      });
                      return new HorizontalLayout(editButton, deleteButton);
@@ -201,10 +199,17 @@ public class KafkaClusterEditorView extends MaestroScreen {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaClusterEditorView.class.getName());
+
     private GridView gridView;
     private EditorForm formView;
+    private ClusterRepository clusterRepository;
+
     @Inject
-    ClusterRepository repository;
+    public KafkaClusterEditorView(ClusterRepository clusterRepository) {
+        this.clusterRepository = clusterRepository;
+
+    }
 
     @Override
     protected String getTitle() {
@@ -219,9 +224,9 @@ public class KafkaClusterEditorView extends MaestroScreen {
     }
 
     private List<KafkaCluster> loadClusters() {
-        return repository.findAll()
-                         .stream()
-                         .map(cluster -> new KafkaCluster(cluster)).toList();
+        return clusterRepository.findAll()
+                                .stream()
+                                .map(cluster -> new KafkaCluster(cluster)).toList();
     }
 
     private void showGrid() {
