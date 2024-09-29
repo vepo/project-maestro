@@ -3,6 +3,7 @@ package io.vepo.maestro.framework;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.function.Function.identity;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.ArrayList;

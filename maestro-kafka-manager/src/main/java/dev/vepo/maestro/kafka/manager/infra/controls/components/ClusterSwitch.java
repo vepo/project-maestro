@@ -13,7 +13,7 @@ import dev.vepo.maestro.kafka.manager.model.Cluster;
 public class ClusterSwitch extends Div {
 
     public ClusterSwitch(Optional<Long> selectedCluster, List<Cluster> availableClusters, Consumer<Cluster> clusterConsumer) {
-        if (availableClusters.isEmpty()) {
+        if (!availableClusters.isEmpty()) {
             addClassName("cluster-switch");
             var clusterComboBox = new ComboBox<Cluster>("Escolher Cluster");
             clusterComboBox.setItemLabelGenerator(Cluster::getName);
