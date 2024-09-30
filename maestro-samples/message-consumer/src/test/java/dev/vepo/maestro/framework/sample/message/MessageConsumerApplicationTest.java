@@ -30,7 +30,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 
 import io.vepo.maestro.framework.MaestroApplication;
-import io.vepo.maestro.framework.serializers.JsonSerializer;
 
 @Testcontainers
 class MessageConsumerApplicationTest {
@@ -65,7 +64,7 @@ class MessageConsumerApplicationTest {
             var configs = new Properties();
             configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
             configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-            configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+            configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
             try (var producer = new KafkaProducer<String, String>(configs)) {
 
                 var message1 = UUID.randomUUID().toString();

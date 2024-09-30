@@ -3,6 +3,7 @@ package dev.vepo.maestro.framework.sample.message;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +12,7 @@ import io.vepo.maestro.framework.annotations.MaestroConsumer;
 import io.vepo.maestro.framework.annotations.Topic;
 import jakarta.inject.Inject;
 
-@MaestroConsumer
+@MaestroConsumer(valueDeserializer = StringDeserializer.class)
 public class MessageHandle {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageHandle.class.getName());
