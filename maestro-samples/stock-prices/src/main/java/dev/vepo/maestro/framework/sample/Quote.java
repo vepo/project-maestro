@@ -3,14 +3,19 @@ package dev.vepo.maestro.framework.sample;
 import java.time.Instant;
 
 import java.util.Objects;
+
+import org.eclipse.jnosql.databases.mongodb.mapping.ObjectIdConverter;
+
 import jakarta.nosql.Column;
+import jakarta.nosql.Convert;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
 @Entity("quote")
 public class Quote {
     @Id("id")
-    private Long id;
+    @Convert(ObjectIdConverter.class)
+    private String id;
 
     @Column
     private String name;
@@ -30,11 +35,11 @@ public class Quote {
         this.timestamp = timestamp;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -69,16 +74,19 @@ public class Quote {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        } else if (obj == null || getClass() != obj.getClass()) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
+        }
         Quote other = (Quote) obj;
-        if (id != other.id)
-            return false;
-        return true;
+        return Objects.equals(id, other.id);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Quote [id=%s, name=%s, price=%.2f, timestamp=%s]",
+                             id, name, price, timestamp);
     }
 
 }
