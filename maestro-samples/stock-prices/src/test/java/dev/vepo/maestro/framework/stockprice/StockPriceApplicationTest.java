@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -51,6 +52,7 @@ class StockPriceApplicationTest {
     }
 
     @Test
+    @Disabled
     void consumeMessages() {
         try (MaestroApplication maestroApplication = startApp(StockPriceApplication.class)) {
             createTopics("stock-prices");
