@@ -3,11 +3,11 @@ package io.vepo.maestro.framework;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.function.Function.identity;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -17,9 +17,13 @@ import java.util.stream.Stream;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.vepo.maestro.framework.annotations.KafkaCluster;
 import io.vepo.maestro.framework.annotations.MaestroConsumer;
 import io.vepo.maestro.framework.exceptions.StartupException;
 import io.vepo.maestro.framework.parallel.WorkerThreadFactory;
@@ -93,8 +97,22 @@ public class MaestroApplication implements AutoCloseable {
     public void run(Class<?> applicationClass) {
         var initializer = SeContainerInitializer.newInstance();
         try {
-            container = initializer.addPackages(true, applicationClass.getPackage())
-                                   .initialize();
+            var builder = initializer.addPackages(true, applicationClass.getPackage());
+            if (Objects.isNull(getClass().getResource("/META-INF/beans.xml"))) {
+                logger.warn("No beans.xml found. Please, create a META-INF/beans.xml file in your project. Loading beans from package {} using reflection.", applicationClass.getPackage());
+                var reflections = new Reflections(new ConfigurationBuilder().forPackages(applicationClass.getPackage().getName())
+                                                                            .setScanners(Scanners.SubTypes,
+                                                                                         Scanners.TypesAnnotated,
+                                                                                         Scanners.MethodsAnnotated));
+
+                reflections.getTypesAnnotatedWith(MaestroConsumer.class)
+                           .forEach(c -> builder.addBeanClasses(c));
+                reflections.getMethodsAnnotatedWith(MaestroConsumer.class)
+                           .forEach(m -> builder.addBeanClasses(m.getDeclaringClass()));
+                reflections.getTypesAnnotatedWith(KafkaCluster.class)
+                           .forEach(c -> builder.addBeanClasses(c));
+            }
+            container = builder.initialize();
         } catch (IllegalStateException ise) {
             if (ise.getMessage().startsWith("WELD-ENV-000016:")) {
                 container = initializer.disableDiscovery()
