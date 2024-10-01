@@ -27,7 +27,7 @@
     <jacoco.version>0.8.12</jacoco.version>
 
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-    <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.jacoco.xmlReportPaths>report-aggregate/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.language>java</sonar.language>
 
     <sonar.organization>vepo-github</sonar.organization>
@@ -180,6 +180,7 @@
     <module>maestro-kafka-manager</module>
     <module>maestro-framework</module>
     <module>maestro-samples</module>
+    <module>report-aggregate</module>
   </modules>
   <build>
     <plugins>
@@ -265,16 +266,6 @@
             <goals>
               <goal>report</goal>
             </goals>
-          </execution>
-          <execution>
-            <id>report-aggregate</id>
-            <goals>
-              <goal>report-aggregate</goal>
-            </goals>
-            <phase>verify</phase>
-            <configuration>
-              <dataFileIncludes>${maven.multiModuleProjectDirectory}/target/jacoco.exec</dataFileIncludes>
-            </configuration>
           </execution>
         </executions>
       </plugin>
