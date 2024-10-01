@@ -26,6 +26,7 @@
     <modules>
         <module>message-consumer</module>
         <module>stock-prices</module>
+        <module>temperature-sensor</module>
     </modules>
     <build>
         <plugins>

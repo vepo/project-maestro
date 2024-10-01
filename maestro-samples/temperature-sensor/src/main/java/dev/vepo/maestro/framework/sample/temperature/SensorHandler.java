@@ -1,4 +1,4 @@
-package dev.vepo.maestro.framework.sample.message;
+package dev.vepo.maestro.framework.sample.temperature;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,19 +10,19 @@ import org.slf4j.LoggerFactory;
 
 import io.vepo.maestro.framework.annotations.MaestroConsumer;
 import io.vepo.maestro.framework.annotations.Topic;
+import io.vepo.maestro.framework.serializers.AvroDeserializer;
 import jakarta.inject.Inject;
 
-@MaestroConsumer(valueDeserializer = StringDeserializer.class)
-public class MessageHandle {
-
-    private static final Logger logger = LoggerFactory.getLogger(MessageHandle.class.getName());
+@MaestroConsumer(keyDeserializer = StringDeserializer.class, valueDeserializer = AvroDeserializer.class)
+public class SensorHandler {
+    private static final Logger logger = LoggerFactory.getLogger(SensorHandler.class.getName());
 
     @Inject
     @ConfigProperty(name = "message.handle.file.path")
     private String filePath;
 
-    @Topic("messages")
-    public void handleMessage(String message) {
+    @Topic("temperature")
+    public void handle(SensorData message) {
         logger.info("Message received: {}", message);
         // save into file path
         try (FileWriter writer = new FileWriter(filePath, true)) {
@@ -31,4 +31,5 @@ public class MessageHandle {
             logger.error("Error writing message to file", e);
         }
     }
+
 }

@@ -27,6 +27,7 @@
     <jacoco.version>0.8.12</jacoco.version>
 
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.language>java</sonar.language>
 
     <sonar.organization>vepo-github</sonar.organization>
@@ -183,6 +184,15 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler-plugin.version}</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-parameters</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <version>3.3.1</version>
@@ -236,6 +246,13 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
+        <configuration>
+          <destFile>${maven.multiModuleProjectDirectory}/target/jacoco.exec</destFile>
+          <append>true</append>
+          <formats>
+            <format>XML</format>
+          </formats>
+        </configuration>
         <executions>
           <execution>
             <id>prepare-agent</id>
@@ -248,10 +265,15 @@
             <goals>
               <goal>report</goal>
             </goals>
+          </execution>
+          <execution>
+            <id>report-aggregate</id>
+            <goals>
+              <goal>report-aggregate</goal>
+            </goals>
+            <phase>verify</phase>
             <configuration>
-              <formats>
-                <format>XML</format>
-              </formats>
+              <dataFileIncludes>${maven.multiModuleProjectDirectory}/target/jacoco.exec</dataFileIncludes>
             </configuration>
           </execution>
         </executions>

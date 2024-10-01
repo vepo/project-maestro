@@ -25,7 +25,6 @@ public class StockPriceHandler {
     public void consumeStockPrice(StockPrice stockPrice, Metadata metadata) {
         logger.info("Consuming stock price: {}", stockPrice);
         logger.info("Metadata: {}", metadata);
-        logger.info("Saving stock price into database! {}", template);
         template.insert(new Quote(stockPrice.id(), stockPrice.price(), Instant.ofEpochMilli(metadata.timestamp())));
     }
 }
