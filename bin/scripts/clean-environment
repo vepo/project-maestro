@@ -1,3 +1,0 @@
-#!/bin/bash
-
-(cd scripts/docker/kafka &&  docker-compose stop && docker-compose rm -f)
