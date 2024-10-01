@@ -13,7 +13,7 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 
 public class MaestroMenu extends VerticalLayout {
 
-    private final Consumer<Optional<Long>> bindMenu;
+    private final transient Consumer<Optional<Long>> bindMenu;
 
     public MaestroMenu(Set<String> roles) {
         var sideBar = new SideNav();

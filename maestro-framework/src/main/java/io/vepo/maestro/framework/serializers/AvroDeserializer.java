@@ -3,13 +3,17 @@ package io.vepo.maestro.framework.serializers;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.apache.avro.Conversion;
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.Decoder;
@@ -46,6 +50,8 @@ public class AvroDeserializer implements Deserializer<Object> {
                          .orElseThrow(() -> new KafkaException("Constructor not found"));
         } else if (data instanceof Utf8 utf8Data) {
             return utf8Data.toString();
+        } else if (data instanceof Long longValue && dataType == Instant.class) {
+            return Instant.ofEpochMilli(longValue);
         } else {
             return data;
         }
@@ -67,6 +73,33 @@ public class AvroDeserializer implements Deserializer<Object> {
 
     }
 
+    private class InstantConversion extends Conversion<Instant> {
+
+        @Override
+        public Class<Instant> getConvertedType() {
+            return Instant.class;
+        }
+
+        @Override
+        public String getLogicalTypeName() {
+            return "long";
+        }
+
+        @Override
+        public Schema getRecommendedSchema() {
+            return SchemaBuilder.builder().longType();
+        }
+
+        @Override
+        public Instant fromLong(Long value, Schema schema, LogicalType type) {
+            if (Objects.nonNull(value)) {
+                return Instant.ofEpochMilli(value);
+            } else {
+                return null;
+            }
+        }
+    }
+
     @Override
     public Object deserialize(String topic, byte[] data) {
         var dataType = Stream.of(type.getDeclaredMethods())
@@ -74,8 +107,9 @@ public class AvroDeserializer implements Deserializer<Object> {
                              .findFirst()
                              .map(m -> m.getParameterTypes()[0])
                              .orElseThrow(() -> new KafkaException("Method not found for topic " + topic));
-
-        var schema = schemaCache.computeIfAbsent(topic, t -> ReflectData.get().getSchema(dataType));
+        var reflectData = ReflectData.get();
+        reflectData.addLogicalTypeConversion(new InstantConversion());
+        var schema = schemaCache.computeIfAbsent(topic, t -> reflectData.getSchema(dataType));
         var reader = readerCache.computeIfAbsent(topic, t -> new GenericDatumReader<>(schema));
         if (Objects.nonNull(data) && data.length > 0) {
             try {
