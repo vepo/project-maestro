@@ -4,6 +4,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -12,6 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 
 import io.vepo.maestro.framework.serializers.JsonDeserializer;
 
+@Documented
 @Target({
     METHOD,
     TYPE })

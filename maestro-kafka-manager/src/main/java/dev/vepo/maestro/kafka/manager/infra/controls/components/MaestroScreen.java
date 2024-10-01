@@ -44,6 +44,27 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     @Inject
     Authenticator authenticator;
 
+    private H2 viewTitle;
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        var params = event.getRouteParameters();
+        params.getParameterNames()
+              .forEach(name -> params.get(name)
+                                     .ifPresent(value -> routeParameters.put(name, value)));
+        params.get("clusterId")
+              .map(Long::valueOf)
+              .ifPresent(clusterSelector::select);
+    }
+
+    @Override
+    public void afterNavigation(AfterNavigationEvent event) {
+
+        viewTitle.setText(getTitle());
+        menu.updateSelectedCluster(clusterSelector.getSelected());
+        setContent(buildContent());
+    }
+
     @PostConstruct
     protected void setup() {
         setPrimarySection(Section.DRAWER);
@@ -75,53 +96,9 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
         return Optional.ofNullable(routeParameters.get(name));
     }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        var params = event.getRouteParameters();
-        params.getParameterNames()
-              .forEach(name -> params.get(name)
-                                     .ifPresent(value -> routeParameters.put(name, value)));
-        params.get("clusterId")
-              .map(Long::valueOf)
-              .ifPresent(clusterSelector::select);
-    }
-
     protected Optional<Cluster> maybeCluster() {
         return clusterSelector.getSelectedCluster();
     }
-
-    @Override
-    public void afterNavigation(AfterNavigationEvent event) {
-
-        viewTitle.setText(getTitle());
-        menu.updateSelectedCluster(clusterSelector.getSelected());
-        setContent(buildContent());
-        // getChildren().filter(c -> c instanceof MaestroMenu || c.getId()
-        // .filter(id -> id.equals("app-header"))
-        // .isPresent())
-        // .forEach(c -> this.remove(c));
-
-        // var header = new Div();
-        // header.setId("app-header");
-        // header.addClassName("app-header");
-        // var maestroMenu = new MaestroMenu(clusterSelector.getSelected());
-        // var appHeader = new Div(new Text("Maestro Kafka Manager"));
-        // appHeader.addClassName("app-header-title");
-        // appHeader.addClickListener(e -> getUI().get().navigate(""));
-        // header.add(appHeader,
-        // new Div(new Text(getTitle())),
-        // new ClusterSwitch(clusterSelector.getSelected(),
-        // clusterRepository.findAll(),
-        // cluster -> {
-        // clusterSelector.select(cluster.id);
-        // maestroMenu.updateSelectedCluster(cluster.id);
-        // }));
-
-        // addToNavbar(header);
-        // addToDrawer(maestroMenu);
-    }
-
-    private H2 viewTitle;
 
     protected void buildNavbar() {
         var toggle = new DrawerToggle();
