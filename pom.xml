@@ -27,7 +27,7 @@
     <jacoco.version>0.8.12</jacoco.version>
 
     <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-    <sonar.coverage.jacoco.xmlReportPaths>report-aggregate/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+    <sonar.coverage.jacoco.xmlReportPaths>${maven.multiModuleProjectDirectory}/report-aggregate/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     <sonar.language>java</sonar.language>
 
     <sonar.organization>vepo-github</sonar.organization>
@@ -247,13 +247,6 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>${jacoco.version}</version>
-        <configuration>
-          <destFile>${maven.multiModuleProjectDirectory}/target/jacoco.exec</destFile>
-          <append>true</append>
-          <formats>
-            <format>XML</format>
-          </formats>
-        </configuration>
         <executions>
           <execution>
             <id>prepare-agent</id>

@@ -70,17 +70,11 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>jacoco-site-aggregate</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>report-aggregate</goal>
                         </goals>
-                        <configuration>
-                            <dataFileIncludes>
-                                <dataFileInclude>
-                                    ${maven.multiModuleProjectDirectory}/target/jacoco.exec</dataFileInclude>
-                            </dataFileIncludes>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco-aggregate</outputDirectory>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
