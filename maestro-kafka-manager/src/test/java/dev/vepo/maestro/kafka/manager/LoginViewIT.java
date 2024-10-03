@@ -10,8 +10,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -22,7 +22,7 @@ import io.quarkus.test.junit.QuarkusIntegrationTest;
 class LoginViewIT {
     @BeforeAll
     static void setupDriver() {
-        WebDriverManager.chromedriver().setup();
+        WebDriverManager.firefoxdriver().setup();
     }
 
     private RemoteWebDriver driver;
@@ -47,11 +47,9 @@ class LoginViewIT {
 
     @BeforeEach
     void createDriver() {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
+        var options = new FirefoxOptions();
         options.addArguments("--headless");
-        driver = new ChromeDriver(options);
+        driver = new FirefoxDriver(options);
     }
 
     @AfterEach
