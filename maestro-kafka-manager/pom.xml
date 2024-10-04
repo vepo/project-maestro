@@ -155,13 +155,22 @@
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <maven.home>${maven.home}</maven.home>
-                        <quarkus.test.arg-line>${argLine}</quarkus.test.arg-line>
-                    </systemPropertyVariables>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-tests</id>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                                <maven.home>${maven.home}</maven.home>
+                                <quarkus.test.arg-line>${failsafeArgLine}</quarkus.test.arg-line>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -169,11 +178,28 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <configuration>
-                    <includes>
-                        <include>**/*.class</include>
-                    </includes>
+                    <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
                 </configuration>
                 <executions>
+                    <!--Skip
+                    all parent executions -->
+                    <execution>
+                        <id>pre-unit-test</id>
+                        <phase />
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase />
+                    </execution>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <phase />
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <phase />
+                    </execution>
+                    <!-- redefine execution -->
                     <execution>
                         <id>default-prepare-agent-integration</id>
                         <goals>
@@ -182,6 +208,7 @@
                         <configuration>
                             <destFile>${project.build.directory}/jacoco-it.exec</destFile>
                             <append>true</append>
+                            <propertyName>failsafeArgLine</propertyName>
                         </configuration>
                     </execution>
                     <execution>
