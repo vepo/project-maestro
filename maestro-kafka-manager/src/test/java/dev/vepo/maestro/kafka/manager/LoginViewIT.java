@@ -3,12 +3,14 @@ package dev.vepo.maestro.kafka.manager;
 import static java.time.Duration.ofSeconds;
 import static org.openqa.selenium.By.xpath;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
+import static org.openqa.selenium.support.ui.ExpectedConditions.textToBePresentInElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.titleIs;
 import static org.openqa.selenium.support.ui.ExpectedConditions.urlToBe;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -27,6 +29,28 @@ class LoginViewIT {
 
     private RemoteWebDriver driver;
 
+    @Order(1)
+    @Test
+    void loginFailedTest() {
+        var wait = new WebDriverWait(driver, ofSeconds(60), ofSeconds(1));
+
+        driver.get("http://localhost:8081");
+        wait.until(urlToBe("http://localhost:8081/login"));
+        wait.until(titleIs("Maestro"));
+
+        var txtUsername = wait.until(elementToBeClickable(xpath("//input[@name='username']")));
+        var txtPassword = wait.until(elementToBeClickable(xpath("//input[@name='password']")));
+
+        txtUsername.sendKeys("admin");
+        txtPassword.sendKeys("wrongpassword");
+        var btnLogin = wait.until(elementToBeClickable(xpath("//vaadin-button[contains(.,'Log in')]")));
+        btnLogin.click();
+        wait.until(urlToBe("http://localhost:8081/login"));
+        // find element with "Incorrect username or password"
+        wait.until(textToBePresentInElementLocated(xpath("//div[@part='error-message']"), "Incorrect username or password"));
+    }
+
+    @Order(2)
     @Test
     void loginSuccessTest() {
         var wait = new WebDriverWait(driver, ofSeconds(60), ofSeconds(1));
