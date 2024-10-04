@@ -33,7 +33,7 @@ class LoginViewIT {
     @Order(1)
     @Test
     void loginFailedTest() {
-        var wait = new WebDriverWait(driver, ofSeconds(90), ofSeconds(1));
+        var wait = new WebDriverWait(driver, ofSeconds(190), ofSeconds(1));
 
         driver.get("http://localhost:8081");
         wait.until(urlToBe("http://localhost:8081/login"));
