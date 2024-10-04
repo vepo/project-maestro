@@ -15,6 +15,9 @@ jobs:
       packages: write
     steps:
     - uses: actions/checkout@v4
+    - uses: browser-actions/setup-firefox@v1
+    - name: Check Firefox
+      run: firefox --version
     - name: Import GPG key
       uses: crazy-max/ghaction-import-gpg@v6
       with:
@@ -35,7 +38,7 @@ jobs:
       run: mvn clean install
     - name: Build Production Delivery
       working-directory: ./maestro-kafka-manager
-      run: mvn clean package -Pproduction
+      run: mvn clean package -Pproduction 
     - name: Build Docker image
       working-directory: ./maestro-kafka-manager
       run: "docker build -f src/main/docker/Dockerfile.jvm -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."
