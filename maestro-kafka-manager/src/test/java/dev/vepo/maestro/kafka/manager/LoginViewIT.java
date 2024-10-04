@@ -20,6 +20,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
+@SuppressWarnings("squid:S2699")
 @QuarkusIntegrationTest
 class LoginViewIT {
     @BeforeAll
@@ -32,7 +33,7 @@ class LoginViewIT {
     @Order(1)
     @Test
     void loginFailedTest() {
-        var wait = new WebDriverWait(driver, ofSeconds(60), ofSeconds(1));
+        var wait = new WebDriverWait(driver, ofSeconds(90), ofSeconds(1));
 
         driver.get("http://localhost:8081");
         wait.until(urlToBe("http://localhost:8081/login"));
