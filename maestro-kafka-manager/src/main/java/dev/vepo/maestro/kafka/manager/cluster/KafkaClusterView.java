@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
@@ -20,6 +21,7 @@ import jakarta.inject.Inject;
 @RolesAllowed({
     Roles.USER,
     Roles.ADMIN })
+@PreserveOnRefresh
 @Route("kafka/:clusterId([1-9][0-9]*)")
 public class KafkaClusterView extends MaestroScreen {
 

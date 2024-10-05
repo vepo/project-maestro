@@ -1,47 +1,33 @@
 package dev.vepo.maestro.kafka.manager;
 
-import static java.time.Duration.ofSeconds;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.openqa.selenium.By.cssSelector;
 import static org.openqa.selenium.By.xpath;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
 import static org.openqa.selenium.support.ui.ExpectedConditions.titleIs;
 import static org.openqa.selenium.support.ui.ExpectedConditions.urlToBe;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.SearchContext;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import dev.vepo.maestro.kafka.manager.utils.MaestroTest;
+import dev.vepo.maestro.kafka.manager.utils.MaestroTest.Context;
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
-@SuppressWarnings("squid:S2699")
 @QuarkusIntegrationTest
+@ExtendWith(MaestroTest.class)
 class LoginViewIT {
     private static final Logger logger = LoggerFactory.getLogger(LoginViewIT.class);
 
-    @BeforeAll
-    static void setupDriver() {
-        WebDriverManager.firefoxdriver().setup();
-    }
-
-    private RemoteWebDriver driver;
-
     @Order(1)
     @Test
-    void loginFailedTest() {
+    void loginFailedTest(Context context) {
         logger.info("Running loginFailedTest");
-        var wait = new WebDriverWait(driver, ofSeconds(60), ofSeconds(1));
+        var wait = context.wait;
+        var driver = context.driver;
 
         logger.info("Opening browser");
         driver.get("http://localhost:8081");
@@ -61,18 +47,17 @@ class LoginViewIT {
         wait.until(urlToBe("http://localhost:8081/login"));
         // find element with "Incorrect username or password"
         logger.info("Checking error message");
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-        var loginForm = wait.until(elementToBeClickable(xpath("//vaadin-login-form-wrapper")));
-        var shadowRoot = (SearchContext) js.executeScript("return arguments[0].shadowRoot.firstElementChild", loginForm);
-        var errorMessage = shadowRoot.findElement(cssSelector("div[part='error-message'"));
+        var errorMessage =context. accessShadowRoot(wait.until(elementToBeClickable(xpath("//vaadin-login-form-wrapper"))),  xpath("//div[@part='error-message']"));
         assertTrue(errorMessage.isDisplayed());
         assertTrue(errorMessage.getText().contains("Incorrect username or password"));
     }
 
     @Order(2)
     @Test
-    void loginSuccessTest() {
-        var wait = new WebDriverWait(driver, ofSeconds(60), ofSeconds(1));
+    void loginSuccessTest(Context context) {
+        logger.info("Running loginSuccessTest");
+        var wait = context.wait;
+        var driver = context.driver;
 
         driver.get("http://localhost:8081");
         wait.until(urlToBe("http://localhost:8081/login"));
@@ -86,17 +71,6 @@ class LoginViewIT {
         var btnLogin = wait.until(elementToBeClickable(xpath("//vaadin-button[contains(.,'Log in')]")));
         btnLogin.click();
         wait.until(urlToBe("http://localhost:8081/"));
-    }
-
-    @BeforeEach
-    void createDriver() {
-        var options = new FirefoxOptions();
-        options.addArguments("--headless");
-        driver = new FirefoxDriver(options);
-    }
-
-    @AfterEach
-    void exitDriver() {
-        driver.quit();
+        assertEquals("Maestro", driver.getTitle());
     }
 }

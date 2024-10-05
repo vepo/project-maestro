@@ -9,7 +9,7 @@ import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -21,17 +21,13 @@ import jakarta.inject.Inject;
 @Route("login")
 @PreserveOnRefresh
 @AnonymousAllowed
-public class LoginView extends VerticalLayout implements BeforeEnterObserver, HasDynamicTitle, ComponentEventListener<AbstractLogin.LoginEvent> {
+@PageTitle("Maestro")
+public class LoginView extends VerticalLayout implements BeforeEnterObserver, ComponentEventListener<AbstractLogin.LoginEvent> {
     final LoginForm loginForm;
 
     private Authenticator authenticator;
 
     private SecurityIdentity identity;
-
-    @Override
-    public String getPageTitle() {
-        return "Maestro";
-    }
 
     @Inject
     public LoginView(Authenticator authenticator, SecurityIdentity identity) {
