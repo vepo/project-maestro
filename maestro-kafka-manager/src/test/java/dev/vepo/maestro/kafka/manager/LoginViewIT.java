@@ -71,6 +71,7 @@ class LoginViewIT {
         var btnLogin = wait.until(elementToBeClickable(xpath("//vaadin-button[contains(.,'Log in')]")));
         btnLogin.click();
         wait.until(urlToBe("http://localhost:8081/"));
+        wait.until(titleIs("Maestro"));
         assertEquals("Maestro", driver.getTitle());
     }
 }
