@@ -7,11 +7,16 @@ import java.util.Objects;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 @Entity(name = "tbl_clusters")
 public class Cluster {
@@ -24,6 +29,14 @@ public class Cluster {
 
     @Column(name = "bootstrap_servers", unique = true)
     private String bootstrapServers;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private Protocol protocol;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "access_ssl_credentials_id", referencedColumnName = "id")
+    private SslCredentials accessSslCredentials;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -72,6 +85,22 @@ public class Cluster {
         this.bootstrapServers = bootstrapServers;
     }
 
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(Protocol protocol) {
+        this.protocol = protocol;
+    }
+
+    public SslCredentials getAccessSslCredentials() {
+        return accessSslCredentials;
+    }
+
+    public void setAccessSslCredentials(SslCredentials accessSslCredentials) {
+        this.accessSslCredentials = accessSslCredentials;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -108,8 +137,8 @@ public class Cluster {
 
     @Override
     public String toString() {
-        return String.format("Cluster [id=%d, name=%s, bootstrapServers=%s, createdAt=%s, updatedAt=%s]",
-                             id, name, bootstrapServers, createdAt, updatedAt);
+        return String.format("Cluster [id=%d, name=%s, bootstrapServers=%s, protocol=%s, accessSslCredentials=%s, createdAt=%s, updatedAt=%s]",
+                             id, name, bootstrapServers, protocol, accessSslCredentials, createdAt, updatedAt);
     }
 
 }
