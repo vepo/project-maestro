@@ -23,9 +23,9 @@ public class SslCredentials {
 
     private static final MessageDigest loadMessageDigest() {
         try {
-            return MessageDigest.getInstance("MD5");
+            return MessageDigest.getInstance("SHA-512");
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("No MD5 found!");
+            throw new IllegalStateException("No SHA-512 found!");
         }
     }
 
