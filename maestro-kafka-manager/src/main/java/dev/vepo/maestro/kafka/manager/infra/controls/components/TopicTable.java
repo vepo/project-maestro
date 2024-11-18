@@ -44,8 +44,8 @@ public class TopicTable extends Table {
             t.partitions().forEach(p -> {
                 addCell(Integer.toString(p.id()), Table.CellClass.NUMERIC);
                 addCell(Integer.toString(p.leader()), Table.CellClass.NUMERIC);
-                addCell(p.replicas().stream().map(i -> i.toString()).collect(Collectors.joining(", ")), Table.CellClass.NUMERIC);
-                addCell(p.isr().stream().map(i -> i.toString()).collect(Collectors.joining(", ")), Table.CellClass.NUMERIC, !p.equals(firstPartition));
+                addCell(p.replicas().stream().map(Object::toString).collect(Collectors.joining(", ")), Table.CellClass.NUMERIC);
+                addCell(p.isr().stream().map(Object::toString).collect(Collectors.joining(", ")), Table.CellClass.NUMERIC, !p.equals(firstPartition));
                 if (p.equals(firstPartition)) {
                     addCell(actionsGenerator.apply(t, this), rowSpan(t.partitions().size()), true);
                 }

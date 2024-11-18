@@ -1,6 +1,7 @@
 package dev.vepo.maestro.kafka.manager;
 
 import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.AbstractLogin;
@@ -8,30 +9,25 @@ import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 import dev.vepo.maestro.kafka.manager.infra.security.Authenticator;
 import io.quarkus.security.identity.SecurityIdentity;
-import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 
-@RequestScoped
 @Route("login")
-
+@PreserveOnRefresh
 @AnonymousAllowed
-public class LoginView extends VerticalLayout implements BeforeEnterObserver, HasDynamicTitle, ComponentEventListener<AbstractLogin.LoginEvent> {
+@PageTitle("Maestro")
+public class LoginView extends VerticalLayout implements BeforeEnterObserver, ComponentEventListener<AbstractLogin.LoginEvent> {
     final LoginForm loginForm;
 
     private Authenticator authenticator;
 
     private SecurityIdentity identity;
-
-    @Override
-    public String getPageTitle() {
-        return "Maestro";
-    }
 
     @Inject
     public LoginView(Authenticator authenticator, SecurityIdentity identity) {
@@ -63,6 +59,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, Ha
     @Override
     public void onComponentEvent(AbstractLogin.LoginEvent loginEvent) {
         if (authenticator.authenticate(loginEvent.getUsername(), loginEvent.getPassword())) {
+            UI.getCurrent().getPage().setLocation("/");
         } else {
             loginForm.setError(true);
         }

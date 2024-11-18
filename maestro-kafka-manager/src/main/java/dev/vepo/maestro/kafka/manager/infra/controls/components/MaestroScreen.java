@@ -17,6 +17,7 @@ import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
+import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import io.quarkus.security.identity.SecurityIdentity;
@@ -26,7 +27,7 @@ import dev.vepo.maestro.kafka.manager.model.ClusterRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
-public abstract class MaestroScreen extends AppLayout implements AfterNavigationObserver, BeforeEnterObserver {
+public abstract class MaestroScreen extends AppLayout implements AfterNavigationObserver, HasDynamicTitle, BeforeEnterObserver {
 
     @Inject
     ClusterSelector clusterSelector;
@@ -116,6 +117,11 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     }
 
     protected abstract String getTitle();
+
+    @Override
+    public String getPageTitle() {
+        return getTitle();
+    }
 
     protected abstract Component buildContent();
 

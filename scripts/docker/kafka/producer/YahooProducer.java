@@ -123,8 +123,19 @@ public class YahooProducer {
         return countDownLatch;
     }
     public static void main(String[] args) throws URISyntaxException {
+        var tlsEnabled = Boolean.valueOf(System.getenv("TLS_ENABLED"));
         var configs = new Properties();
-        configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:9092, kafka-1:9094, kafka-2:9096");
+        if (tlsEnabled) {
+            configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-broker-tls-0:9192,kafka-broker-tls-1:9194,kafka-broker-tls-2:9196");
+            configs.put("security.protocol", "SSL");
+            configs.put("ssl.keystore.location", "/kafka-security/kafka.producer.keystore.jks");
+            configs.put("ssl.keystore.password", "password");
+            configs.put("ssl.truststore.location", "/kafka-security/kafka.producer.truststore.jks");
+            configs.put("ssl.truststore.password", "password");
+            configs.put("ssl.key.password", "password");
+        } else {
+            configs.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka-0:9092, kafka-1:9094, kafka-2:9096");
+        }
         configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         var running = new AtomicBoolean(true);

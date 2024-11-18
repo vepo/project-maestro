@@ -35,10 +35,10 @@ jobs:
       run: |
         echo "RELEASE_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
     - name: Install all the dependencies
-      run: mvn clean install
+      run: mvn clean install -P maven-publisher
     - name: Build Production Delivery
       working-directory: ./maestro-kafka-manager
-      run: mvn clean package -Pproduction 
+      run: mvn clean package -P production,maven-publisher
     - name: Build Docker image
       working-directory: ./maestro-kafka-manager
       run: "docker build -f src/main/docker/Dockerfile.jvm -t vepo/maestro-kafka-manager:${{ env.RELEASE_VERSION }} ."

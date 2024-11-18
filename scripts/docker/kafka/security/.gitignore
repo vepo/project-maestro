@@ -1,0 +1,9 @@
+*.jks
+*.pem
+*.p12
+*.srl
+*.crt
+*.csr
+*_creds
+*.key
+*.req
