@@ -1,8 +1,14 @@
 package dev.vepo.maestro.kafka.manager.model;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Objects;
+import java.util.Optional;
 
-import io.undertow.server.session.SslSessionConfig;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +20,40 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "tbl_cluster_ssl_credentials")
 public class SslCredentials {
+
+    private static final MessageDigest loadMessageDigest() {
+        try {
+            return MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("No MD5 found!");
+        }
+    }
+
+    private static Optional<File> getTemporaryFile(String filename, byte[] data) {
+        if (Objects.nonNull(filename)) {
+            var hashDigest = loadMessageDigest();
+            hashDigest.update(data);
+            var hash = hashDigest.digest();
+            var hashStringBuilder = new StringBuilder();
+            for (byte b : hash) {
+                // Convert each byte to a 2-digit hex value
+                hashStringBuilder.append(String.format("%02x", b));
+            }
+            var tempPath = Paths.get("/", "tmp", hashStringBuilder.toString(), filename);
+            if (!tempPath.toFile().exists()) {
+                tempPath.toFile().getParentFile().mkdirs();
+                try (FileOutputStream fos = new FileOutputStream(tempPath.toFile())) {
+                    fos.write(data);
+                } catch (IOException ioe) {
+                    return Optional.empty();
+                }
+            }
+            return Optional.of(tempPath.toFile());
+        } else {
+            return Optional.empty();
+        }
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,12 +62,18 @@ public class SslCredentials {
     @Column(name = "keystore")
     private byte[] keystore;
 
+    @Column(name = "keystore_filename")
+    private String keystoreFilename;
+
     @Column(name = "keystore_password")
     private String keystorePassword;
 
     @Lob
     @Column(name = "truststore")
     private byte[] truststore;
+
+    @Column(name = "truststore_filename")
+    private String truststoreFilename;
 
     @Column(name = "truststore_password")
     private String truststorePassword;
@@ -36,10 +82,18 @@ public class SslCredentials {
     @Column(name = "key_password")
     private String keyPassword;
 
-    public SslCredentials(byte[] keystore, String keystorePassword, byte[] truststore, String truststorePassword, String keyPassword) {
+    public SslCredentials(byte[] keystore,
+            String keystoreFilename,
+            String keystorePassword,
+            byte[] truststore,
+            String truststoreFilename,
+            String truststorePassword,
+            String keyPassword) {
         this.keystore = keystore;
+        this.keystoreFilename = keystoreFilename;
         this.keystorePassword = keystorePassword;
         this.truststore = truststore;
+        this.truststoreFilename = truststoreFilename;
         this.truststorePassword = truststorePassword;
         this.keyPassword = keyPassword;
     }
@@ -62,6 +116,30 @@ public class SslCredentials {
 
     public void setKeystore(byte[] keystore) {
         this.keystore = keystore;
+    }
+
+    public String getKeystoreFilename() {
+        return keystoreFilename;
+    }
+
+    public void setKeystoreFilename(String keystoreFilename) {
+        this.keystoreFilename = keystoreFilename;
+    }
+
+    public String getTruststoreFilename() {
+        return truststoreFilename;
+    }
+
+    public void setTruststoreFilename(String truststoreFilename) {
+        this.truststoreFilename = truststoreFilename;
+    }
+
+    public Optional<File> getTemporaryTruststore() {
+        return getTemporaryFile(truststoreFilename, truststore);
+    }
+
+    public Optional<File> getTemporaryKeystore() {
+        return getTemporaryFile(keystoreFilename, keystore);
     }
 
     public String getKeystorePassword() {
@@ -114,7 +192,8 @@ public class SslCredentials {
 
     @Override
     public String toString() {
-        return String.format("SslCredentials [id=%d, keystore=%s, keystorePassword=%s, truststore=%s, truststorePassword=%s, keyPassword=%s]",
-                             id, keystore, keystorePassword, truststore, truststore, keyPassword);
+        return String.format("SslCredentials [id=%d, keystore=%s, keystoreFilename=%s, keystorePassword=%s, truststore=%s, truststoreFilename=%s, truststorePassword=%s, keyPassword=%s]",
+                             id, keystore, keystoreFilename, keystorePassword, truststore, truststoreFilename,
+                             truststore, keyPassword);
     }
 }

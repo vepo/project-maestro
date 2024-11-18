@@ -1,9 +1,12 @@
 package dev.vepo.maestro.kafka.manager.cluster;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +20,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -89,6 +93,9 @@ public class KafkaClusterEditorView extends MaestroScreen {
     private class SslAccessCredentialsForm extends Div {
         private final FormLayout form;
         private final Div naLabel;
+        private final MemoryBuffer keystoreBuffer;
+        private final MemoryBuffer truststoreBuffer;
+        private final Supplier<SslCredentials> loadCredentials;
 
         private SslAccessCredentialsForm() {
             form = new FormLayout();
@@ -97,12 +104,16 @@ public class KafkaClusterEditorView extends MaestroScreen {
             add(form, naLabel);
 
             var upKeystore = new Upload();
+            keystoreBuffer = new MemoryBuffer();
+            upKeystore.setReceiver(keystoreBuffer);
             form.addFormItem(upKeystore, "Keystore");
 
             var txtKeystorePassword = new TextField();
             form.addFormItem(txtKeystorePassword, "Keystore Password");
 
             var upTruststore = new Upload();
+            truststoreBuffer = new MemoryBuffer();
+            upTruststore.setReceiver(truststoreBuffer);
             form.addFormItem(upTruststore, "Truststore");
 
             var txtTruststorePassword = new TextField();
@@ -110,6 +121,19 @@ public class KafkaClusterEditorView extends MaestroScreen {
 
             var txtKeyPassword = new TextField();
             form.addFormItem(txtKeyPassword, "Key Password");
+            loadCredentials = () -> {
+                try {
+                    return new SslCredentials(IOUtils.toByteArray(keystoreBuffer.getInputStream()),
+                                              keystoreBuffer.getFileName(),
+                                              txtKeyPassword.getValue(),
+                                              IOUtils.toByteArray(truststoreBuffer.getInputStream()),
+                                              truststoreBuffer.getFileName(),
+                                              txtTruststorePassword.getValue(),
+                                              txtKeyPassword.getValue());
+                } catch (IOException ioe) {
+                    return null;
+                }
+            };
         }
 
         private void showSslComponents() {
@@ -123,7 +147,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
         }
 
         public SslCredentials getCredential() {
-            return new SslCredentials();
+            return loadCredentials.get();
         }
 
     }
@@ -141,7 +165,8 @@ public class KafkaClusterEditorView extends MaestroScreen {
             txtId.setReadOnly(true);
             binder.forField(txtId)
                   .bind(cluster -> cluster.getId().map(Object::toString).orElse(""),
-                        (cluster, id) -> cluster.id = id != null && !id.isBlank() ? Optional.of(Long.parseLong(id)) : Optional.empty());
+                        (cluster, id) -> cluster.id = id != null && !id.isBlank() ? Optional.of(Long.parseLong(id))
+                                                                                  : Optional.empty());
             form.addFormItem(txtId, "ID");
 
             var txtName = new TextField();
