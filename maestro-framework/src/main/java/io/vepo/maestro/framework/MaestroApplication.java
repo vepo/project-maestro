@@ -107,11 +107,11 @@ public class MaestroApplication implements AutoCloseable {
                                                                                          Scanners.MethodsAnnotated));
 
                 reflections.getTypesAnnotatedWith(MaestroConsumer.class)
-                           .forEach(c -> builder.addBeanClasses(c));
+                           .forEach(builder::addBeanClasses);
                 reflections.getMethodsAnnotatedWith(MaestroConsumer.class)
                            .forEach(m -> builder.addBeanClasses(m.getDeclaringClass()));
                 reflections.getTypesAnnotatedWith(KafkaCluster.class)
-                           .forEach(c -> builder.addBeanClasses(c));
+                           .forEach(builder::addBeanClasses);
             }
             container = builder.initialize();
         } catch (IllegalStateException ise) {

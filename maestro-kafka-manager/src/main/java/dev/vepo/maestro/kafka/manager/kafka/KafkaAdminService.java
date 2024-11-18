@@ -1,6 +1,7 @@
 package dev.vepo.maestro.kafka.manager.kafka;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -196,44 +197,56 @@ public class KafkaAdminService {
     }
 
     public List<KafkaTopic> listTopics() throws KafkaUnexpectedException {
-        var topics = client.map(KafkaAdminService::listTopicsInternal)
-                           .get()
-                           .getOrThrow()
-                           .stream()
-                           .toList();
-        var descriptions = client.map(c -> describeTopics(c, topics.stream()
-                                                                   .map(TopicListing::name)
-                                                                   .toList()))
-                                 .get()
-                                 .getOrThrow();
-        return topics.stream()
-                     .map(topic -> new KafkaTopic(topic, descriptions.get(topic.name())))
-                     .toList();
+        if (client.isPresent()) {
+            var topics = client.map(KafkaAdminService::listTopicsInternal)
+                               .get()
+                               .getOrThrow()
+                               .stream()
+                               .toList();
+            var descriptions = client.map(c -> describeTopics(c, topics.stream()
+                                                                       .map(TopicListing::name)
+                                                                       .toList()))
+                                     .get()
+                                     .getOrThrow();
+            return topics.stream()
+                         .map(topic -> new KafkaTopic(topic, descriptions.get(topic.name())))
+                         .toList();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public List<ConsumerGroup> listConsumers() throws KafkaUnexpectedException {
-        var groups = client.map(KafkaAdminService::listConsumersInternal)
-                           .get()
-                           .getOrThrow()
-                           .stream()
-                           .toList();
-        var descriptions = client.map(c -> describeConsumerGroups(c, groups.stream()
-                                                                           .map(ConsumerGroupListing::groupId)
-                                                                           .toList()))
-                                 .get()
-                                 .getOrThrow();
-        return groups.stream()
-                     .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId())))
-                     .toList();
+        if (client.isPresent()) {
+            var groups = client.map(KafkaAdminService::listConsumersInternal)
+                               .get()
+                               .getOrThrow()
+                               .stream()
+                               .toList();
+            var descriptions = client.map(c -> describeConsumerGroups(c, groups.stream()
+                                                                               .map(ConsumerGroupListing::groupId)
+                                                                               .toList()))
+                                     .get()
+                                     .getOrThrow();
+            return groups.stream()
+                         .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId())))
+                         .toList();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public List<KafkaNode> describeBroker() throws KafkaUnexpectedException {
-        return client.map(KafkaAdminService::describeClusterInternal)
-                     .get()
-                     .getOrThrow()
-                     .stream()
-                     .map(KafkaNode::new)
-                     .toList();
+        if (client.isPresent()) {
+            return client.map(KafkaAdminService::describeClusterInternal)
+                         .get()
+                         .getOrThrow()
+                         .stream()
+                         .map(KafkaNode::new)
+                         .toList();
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public void deleteTopic(String name) {

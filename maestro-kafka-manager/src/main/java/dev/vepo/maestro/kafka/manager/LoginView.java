@@ -62,7 +62,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, Co
             UI.getCurrent().getPage().setLocation("/");
         } else {
             loginForm.setError(true);
-
         }
     }
 }
