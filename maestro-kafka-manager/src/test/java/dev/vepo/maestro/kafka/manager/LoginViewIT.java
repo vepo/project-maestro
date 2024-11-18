@@ -13,12 +13,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dev.vepo.maestro.kafka.manager.utils.MaestroTest;
-import dev.vepo.maestro.kafka.manager.utils.MaestroTest.Context;
+import dev.vepo.maestro.kafka.manager.utils.MaestroExtension;
+import dev.vepo.maestro.kafka.manager.utils.MaestroExtension.Context;
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 
 @QuarkusIntegrationTest
-@ExtendWith(MaestroTest.class)
+@ExtendWith(MaestroExtension.class)
 class LoginViewIT {
     private static final Logger logger = LoggerFactory.getLogger(LoginViewIT.class);
 

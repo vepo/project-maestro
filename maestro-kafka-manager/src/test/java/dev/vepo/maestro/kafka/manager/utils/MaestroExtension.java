@@ -1,14 +1,12 @@
 package dev.vepo.maestro.kafka.manager.utils;
 
 import static java.time.Duration.ofSeconds;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openqa.selenium.By.xpath;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
 import static org.openqa.selenium.support.ui.ExpectedConditions.titleIs;
 import static org.openqa.selenium.support.ui.ExpectedConditions.urlToBe;
 
 import java.util.Objects;
-import java.util.function.IntPredicate;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -25,7 +23,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
-public class MaestroTest implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+public class MaestroExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     public class Context {
         private Context(FirefoxDriver driver, WebDriverWait wait) {
