@@ -20,6 +20,7 @@ import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.GroupType;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.vepo.maestro.kafka.manager.infra.controls.components.ClusterSelector;
+import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnaccessibleException;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
 import dev.vepo.maestro.kafka.manager.model.SslCredentials;
@@ -190,9 +192,13 @@ public class KafkaAdminService {
                                         default:
                                             break;
                                     }
-                                    // adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
-                                    // adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
-                                    return AdminClient.create(adminProperties);
+                                    adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
+                                    adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
+                                    try {
+                                        return AdminClient.create(adminProperties);
+                                    } catch (KafkaException ke) {
+                                        throw new KafkaUnaccessibleException("Could not access Kafka Brokers!", ke);
+                                    }
                                 });
     }
 
