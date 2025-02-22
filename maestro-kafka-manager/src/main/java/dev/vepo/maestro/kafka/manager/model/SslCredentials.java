@@ -78,7 +78,6 @@ public class SslCredentials {
     @Column(name = "truststore_password")
     private String truststorePassword;
 
-    @Lob
     @Column(name = "key_password")
     private String keyPassword;
 

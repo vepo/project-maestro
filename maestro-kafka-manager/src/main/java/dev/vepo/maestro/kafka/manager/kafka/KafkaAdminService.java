@@ -32,6 +32,7 @@ import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnaccessibleExceptio
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnavailableException;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnexpectedException;
 import dev.vepo.maestro.kafka.manager.model.SslCredentials;
+import dev.vepo.maestro.kafka.manager.tcp.TcpCheck;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -194,10 +195,15 @@ public class KafkaAdminService {
                                     }
                                     adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
                                     adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
-                                    try {
-                                        return AdminClient.create(adminProperties);
-                                    } catch (KafkaException ke) {
-                                        throw new KafkaUnaccessibleException("Could not access Kafka Brokers!", ke);
+                                    if (TcpCheck.fromKafkaBootstrapServers(cluster.getBootstrapServers())
+                                                .anyMatch(TcpCheck::isListening)) {
+                                        try {
+                                            return AdminClient.create(adminProperties);
+                                        } catch (KafkaException ke) {
+                                            throw new KafkaUnaccessibleException("Could not access Kafka Brokers!", ke);
+                                        }
+                                    } else {
+                                        throw new KafkaUnaccessibleException("Could not access Kafka Brokers!");
                                     }
                                 });
     }

@@ -19,7 +19,7 @@ create table tbl_cluster_ssl_credentials (
   keystore            OID,
   keystore_password   VARCHAR(255),
   keystore_filename   VARCHAR(255), 
-  key_password        OID,
+  key_password        VARCHAR(255),
   PRIMARY KEY (id)
 );
 
