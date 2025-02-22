@@ -19,8 +19,11 @@ public class ConsumerGroupTable extends Table {
         addHeader("Assignment");
 
         consumers.forEach(c -> {
-            var rowSpan = rowSpan(Math.max(1, c.members().size()));
-
+            var rowSpan = rowSpan(Math.max(1, c.members()
+                                               .stream()
+                                               .mapToInt(m -> m.assignment()
+                                                               .size())
+                                               .sum()));
             addCell(c.id(), rowSpan);
             addCell(c.type(), rowSpan);
             addCell(c.state(), rowSpan);
@@ -32,10 +35,17 @@ public class ConsumerGroupTable extends Table {
                 addCell("N/A", true);
             } else {
                 c.members().forEach(m -> {
-                    addCell(m.consumerId());
-                    addCell(m.clientId());
-                    addCell(m.host());
-                    addCell(m.assignment().toString(), true);
+                    var memberRowSpan = rowSpan(Math.max(1, m.assignment()
+                                                             .size()));
+                    addCell(m.consumerId(), memberRowSpan);
+                    addCell(m.clientId(), memberRowSpan);
+                    addCell(m.host(), memberRowSpan);
+                    m.assignment()
+                     .stream()
+                     .forEach(t -> {
+                         addCell(String.format("%s:%d", t.topic(), t.partition()));
+                         addCell(Long.toString(t.offset()), true);
+                     });
                 });
             }
         });

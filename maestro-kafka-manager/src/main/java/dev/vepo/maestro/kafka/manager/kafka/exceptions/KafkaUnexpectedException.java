@@ -6,6 +6,10 @@ public class KafkaUnexpectedException extends Exception {
         super(cause);
     }
 
+    public KafkaUnexpectedException(String message) {
+        super(message);
+    }
+
     public KafkaUnexpectedException(String message, Exception cause) {
         super(message, cause);
     }

@@ -39,6 +39,7 @@ table.custom-table {
 .custom-table tr td {
     padding: 10px;
     border: 1px solid #DDDDDD;
+    vertical-align: middle;
 }
 
 .custom-table tr.even {

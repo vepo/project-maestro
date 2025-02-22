@@ -1,4 +1,3 @@
-version: '3'
 services:
   kafka-broker-tls-0:
     image: vepo/kafka:3.7.0
@@ -111,19 +110,19 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://:9096,CONTROLLER://kafka-2:9097
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9096
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-0:9093,2@kafka-1:9095,3@kafka-2:9097
-  # producer-btc-usd:
-  #   image: jbangdev/jbang-action
-  #   container_name: producer-btc-usd
-  #   depends_on:
-  #     - kafka-0
-  #     - kafka-1
-  #     - kafka-2
-  #   volumes:
-  #     - ./producer:/producer
-  #   command: /producer/YahooProducer.java
-  #   environment:
-  #     SUBSCRIBE_MESSAGE: | 
-  #       {"subscribe":["BTC-USD","ES=F","YM=F","NQ=F"]}
+  producer-btc-usd:
+    image: jbangdev/jbang-action
+    container_name: producer-btc-usd
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    volumes:
+      - ./producer:/producer
+    command: /producer/YahooProducer.java
+    environment:
+      SUBSCRIBE_MESSAGE: | 
+        {"subscribe":["BTC-USD","ES=F","YM=F","NQ=F"]}
   producer-eth-usd:
     image: jbangdev/jbang-action
     container_name: producer-eth-usd
@@ -152,19 +151,19 @@ services:
       TLS_ENABLED: "true"
       SUBSCRIBE_MESSAGE: |
         {"subscribe":["ETH-USD","ES=F","YM=F","NQ=F","RTY=F","CL=F","GC=F"]}
-  # producer-dox:
-  #   image: jbangdev/jbang-action
-  #   container_name: producer-dox
-  #   depends_on:
-  #     - kafka-0
-  #     - kafka-1
-  #     - kafka-2
-  #   volumes:
-  #     - ./producer:/producer
-  #   command: /producer/YahooProducer.java
-  #   environment:
-  #     SUBSCRIBE_MESSAGE: |
-  #       {"subscribe":["DOX","ES=F","YM=F","NQ=F"]}
+  producer-dox:
+    image: jbangdev/jbang-action
+    container_name: producer-dox
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    volumes:
+      - ./producer:/producer
+    command: /producer/YahooProducer.java
+    environment:
+      SUBSCRIBE_MESSAGE: |
+        {"subscribe":["DOX","ES=F","YM=F","NQ=F"]}
   # producer-1:
   #   image: jbangdev/jbang-action
   #   container_name: producer-1
@@ -185,18 +184,62 @@ services:
   #   volumes:
   #     - ./consumer:/consumer
   #   command: /consumer/ConsumeData.java
-  # consumer-1:
-  #   image: jbangdev/jbang-action
-  #   container_name: consumer-1
-  #   depends_on:
-  #     - kafka-0
-  #     - kafka-1
-  #     - kafka-2
-  #   environment:
-  #     GROUP_ID: main-group
-  #   volumes:
-  #     - ./consumer:/consumer
-  #   command: /consumer/ConsumeData.java
+  consumer-tls-1:
+    image: jbangdev/jbang-action
+    container_name: consumer-tls-1
+    depends_on:
+      - kafka-broker-tls-0
+      - kafka-broker-tls-1
+      - kafka-broker-tls-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices
+      TLS_ENABLED: "true"
+    volumes:
+      - ./consumer:/consumer
+      - ./security/producer:/kafka-security
+    command: /consumer/ConsumeData.java
+  consumer-tls-2:
+    image: jbangdev/jbang-action
+    container_name: consumer-tls-2
+    depends_on:
+      - kafka-broker-tls-0
+      - kafka-broker-tls-1
+      - kafka-broker-tls-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices
+      TLS_ENABLED: "true"
+    volumes:
+      - ./consumer:/consumer
+      - ./security/producer:/kafka-security
+    command: /consumer/ConsumeData.java
+  consumer-1:
+    image: jbangdev/jbang-action
+    container_name: consumer-1
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices
+    volumes:
+      - ./consumer:/consumer
+    command: /consumer/ConsumeData.java
+  consumer-2:
+    image: jbangdev/jbang-action
+    container_name: consumer-2
+    depends_on:
+      - kafka-0
+      - kafka-1
+      - kafka-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices
+    volumes:
+      - ./consumer:/consumer
+    command: /consumer/ConsumeData.java
   # consumer-2:
   #   image: jbangdev/jbang-action
   #   container_name: consumer-2

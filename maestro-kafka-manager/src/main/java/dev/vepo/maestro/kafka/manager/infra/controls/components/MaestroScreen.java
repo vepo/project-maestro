@@ -113,6 +113,7 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
                                               cluster -> {
                                                   clusterSelector.select(cluster.getId());
                                                   menu.updateSelectedCluster(Optional.of(cluster.getId()));
+                                                  setContent(buildContent());
                                               });
         addToDrawer(appName,
                     new VerticalLayout(clusterSwitch),

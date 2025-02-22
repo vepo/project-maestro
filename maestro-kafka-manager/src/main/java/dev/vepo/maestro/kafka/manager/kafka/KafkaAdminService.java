@@ -18,10 +18,12 @@ import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.MemberDescription;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.GroupType;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
 import org.slf4j.Logger;
@@ -40,15 +42,42 @@ import jakarta.inject.Inject;
 @RequestScoped
 public class KafkaAdminService {
 
-    public record ConsumerGroup(String id, String type, String state, String coordinator,
-                                List<MemberDescription> members) {
+    public record KafkaConsumerMetadata(Map<TopicPartition, OffsetAndMetadata> status) {
+        public long offset(TopicPartition partition) {
+            return Optional.ofNullable(status.get(partition))
+                           .map(OffsetAndMetadata::offset)
+                           .orElse(0L);
+        }
+    }
 
-        public ConsumerGroup(ConsumerGroupListing group, ConsumerGroupDescription description) {
+    public record ConsumerPosition(String topic, int partition, long offset) {
+        public ConsumerPosition(TopicPartition partition, long offset) {
+            this(partition.topic(), partition.partition(), offset);
+        }
+    }
+
+    public record ConsumerGroupMember(String consumerId, String clientId, String host, List<ConsumerPosition> assignment) {
+        public ConsumerGroupMember(MemberDescription member, KafkaConsumerMetadata metadata) {
+            this(member.consumerId(),
+                 member.clientId(),
+                 member.host(),
+                 member.assignment()
+                       .topicPartitions()
+                       .stream()
+                       .map(partition -> new ConsumerPosition(partition, metadata.offset(partition)))
+                       .toList());
+        }
+    }
+
+    public record ConsumerGroup(String id, String type, String state, String coordinator,
+                                List<ConsumerGroupMember> members) {
+
+        public ConsumerGroup(ConsumerGroupListing group, ConsumerGroupDescription description, KafkaConsumerMetadata metadata) {
             this(group.groupId(),
                  group.type().map(GroupType::name).orElse(description.type().name()),
                  group.state().map(ConsumerGroupState::name).orElse(description.state().name()),
                  description.coordinator().host(),
-                 description.members().stream().toList());
+                 description.members().stream().map(m -> new ConsumerGroupMember(m, metadata)).toList());
         }
     }
 
@@ -133,6 +162,28 @@ public class KafkaAdminService {
         }
     }
 
+    private static KafkaResponse<KafkaConsumerMetadata, KafkaUnexpectedException> getConsumerGroupOffsets(AdminClient client, Optional<String> maybeGroupId) {
+        try {
+            if (maybeGroupId.isPresent()) {
+                var groupId = maybeGroupId.get();
+                var offsets = client.listConsumerGroupOffsets(groupId)
+                                    .all()
+                                    .get(500, TimeUnit.MILLISECONDS);
+                if (offsets.containsKey(groupId)) {
+                    return new KafkaResponse<>(new KafkaConsumerMetadata(offsets.get(groupId)));
+                }
+            }
+            return new KafkaResponse<>(new KafkaUnexpectedException("No consumer group found!"));
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null; // this line is never executed!
+        } catch (ExecutionException e) {
+            return new KafkaResponse<>(new KafkaUnexpectedException(e));
+        } catch (TimeoutException e) {
+            return new KafkaResponse<>(new KafkaUnavailableException("Could not connecto with Kafka Brokers!", e));
+        }
+    }
+
     private static KafkaResponse<Collection<Node>, KafkaUnexpectedException> describeClusterInternal(AdminClient client) {
         try {
             return new KafkaResponse<>(client.describeCluster().nodes().get(500, TimeUnit.MILLISECONDS));
@@ -193,8 +244,6 @@ public class KafkaAdminService {
                                         default:
                                             break;
                                     }
-                                    adminProperties.put(AdminClientConfig.REQUEST_TIMEOUT_MS_CONFIG, 1500);
-                                    adminProperties.put(AdminClientConfig.RETRIES_CONFIG, 0);
                                     if (TcpCheck.fromKafkaBootstrapServers(cluster.getBootstrapServers())
                                                 .anyMatch(TcpCheck::isListening)) {
                                         try {
@@ -240,8 +289,13 @@ public class KafkaAdminService {
                                                                                .toList()))
                                      .get()
                                      .getOrThrow();
+            var metadata = client.map(c -> getConsumerGroupOffsets(c, groups.stream()
+                                                                            .map(s -> s.groupId())
+                                                                            .findFirst()))
+                                 .get()
+                                 .getOrThrow();
             return groups.stream()
-                         .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId())))
+                         .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId()), metadata))
                          .toList();
         } else {
             return Collections.emptyList();
