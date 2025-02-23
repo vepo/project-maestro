@@ -2,6 +2,7 @@ package dev.vepo.maestro.kafka.manager.infra.controls.components;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -129,6 +130,10 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
 
     protected Optional<Cluster> maybeCluster() {
         return clusterSelector.getSelectedCluster();
+    }
+
+    protected List<Cluster> allClusters() {
+        return clusterRepository.findAll();
     }
 
     protected void buildNavbar() {
