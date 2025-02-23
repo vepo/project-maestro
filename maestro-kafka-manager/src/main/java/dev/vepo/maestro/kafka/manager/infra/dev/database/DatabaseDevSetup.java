@@ -23,6 +23,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.resource.spi.IllegalStateException;
+import jakarta.transaction.SystemException;
 
 @ApplicationScoped
 @IfBuildProfile("dev")
@@ -31,12 +32,12 @@ public class DatabaseDevSetup {
     @Inject
     private DataSource dataSource;
 
-    void onStart(@Observes StartupEvent ev) throws IllegalStateException {
+    void onStart(@Observes StartupEvent ev) throws IllegalStateException, SecurityException, SystemException {
         logger.info("Running database initialization for development environment...");
         insertSslCredentials();
     }
 
-    private void insertSslCredentials() throws IllegalStateException {
+    private void insertSslCredentials() throws IllegalStateException, SecurityException, SystemException {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
             var lobj = conn.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
@@ -66,7 +67,7 @@ public class DatabaseDevSetup {
                 ResultSet rs = pstmt.executeQuery();
                 if (rs.next()) {
                     credentialId = rs.getLong(1);
-                    logger.info("Inserted SSL credential with ID: %d", credentialId);
+                    logger.info("Inserted SSL credential with ID: {}", credentialId);
                 } else {
                     throw new IllegalStateException("Could not add credentials");
                 }
@@ -78,13 +79,13 @@ public class DatabaseDevSetup {
             insertCluster(conn, "Cluster Plain", "kafka-0:9092, kafka-1:9094, kafka-2:9096", null, "PLAINTEXT");
 
             // Insert Admin User
-            insertUser(conn, "admin", "admin@maestro.dev", "a.PBxeqfl2XiF/Voe2x33E4SpI4ln5qF2FzR1HojEQho5ilC", "ADMIN");
+            insertUser(conn, "admin", "admin@maestro.dev", "$2a$10$JQjLXQ.PBxeqfl2XiF/Voe2x33E4SpI4ln5qF2FzR1HojEQho5ilC", "ADMIN");
             conn.commit();
         } catch (SQLException e) {
             logger.error("Failed to insert SSL credentials", e);
         } catch (FileNotFoundException fnfe) {
             logger.error("Could not find TLS files! Please execute './scripts/generate-security-keys.sh'", fnfe);
-        } catch(IOException ioe) {
+        } catch (IOException ioe) {
             logger.error("Error reading files", ioe);
         }
     }
