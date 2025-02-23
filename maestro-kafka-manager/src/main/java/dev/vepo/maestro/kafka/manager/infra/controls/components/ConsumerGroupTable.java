@@ -12,11 +12,13 @@ public class ConsumerGroupTable extends Table {
         addHeader("Type", rowSpan(2));
         addHeader("State", rowSpan(2));
         addHeader("Coordinator", rowSpan(2));
-        addHeader("Members", rowSpan(1), colspan(4), true);
+        addHeader("Members", rowSpan(1), colspan(6), true);
         addHeader("Consumer ID");
         addHeader("Client ID");
         addHeader("Host");
         addHeader("Assignment");
+        addHeader("Offset");
+        addHeader("LAG");
 
         consumers.forEach(c -> {
             var rowSpan = rowSpan(Math.max(1, c.members()
@@ -32,6 +34,8 @@ public class ConsumerGroupTable extends Table {
                 addCell("N/A");
                 addCell("N/A");
                 addCell("N/A");
+                addCell("N/A");
+                addCell("N/A");
                 addCell("N/A", true);
             } else {
                 c.members().forEach(m -> {
@@ -44,7 +48,8 @@ public class ConsumerGroupTable extends Table {
                      .stream()
                      .forEach(t -> {
                          addCell(String.format("%s:%d", t.topic(), t.partition()));
-                         addCell(Long.toString(t.offset()), true);
+                         addCell(Long.toString(t.offset()));
+                         addCell(Long.toString(t.lag()), true);
                      });
                 });
             }

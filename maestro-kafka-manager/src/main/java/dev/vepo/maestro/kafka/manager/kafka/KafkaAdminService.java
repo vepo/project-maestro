@@ -7,17 +7,22 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.admin.MemberDescription;
+import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.apache.kafka.clients.admin.TopicListing;
+import org.apache.kafka.clients.admin.ListOffsetsResult.ListOffsetsResultInfo;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.ConsumerGroupState;
 import org.apache.kafka.common.GroupType;
@@ -42,6 +47,14 @@ import jakarta.inject.Inject;
 @RequestScoped
 public class KafkaAdminService {
 
+    public record TopicPartitionOffsets(Map<TopicPartition, ListOffsetsResultInfo> data) {
+        public long offset(TopicPartition partition) {
+            return Optional.ofNullable(data.get(partition))
+                           .map(ListOffsetsResultInfo::offset)
+                           .orElse(0L);
+        }
+    }
+
     public record KafkaConsumerMetadata(Map<TopicPartition, OffsetAndMetadata> status) {
         public long offset(TopicPartition partition) {
             return Optional.ofNullable(status.get(partition))
@@ -50,34 +63,33 @@ public class KafkaAdminService {
         }
     }
 
-    public record ConsumerPosition(String topic, int partition, long offset) {
-        public ConsumerPosition(TopicPartition partition, long offset) {
-            this(partition.topic(), partition.partition(), offset);
+    public record ConsumerPosition(String topic, int partition, long offset, long lag) {
+        public ConsumerPosition(TopicPartition partition, long offset, long lag) {
+            this(partition.topic(), partition.partition(), offset, lag);
         }
     }
 
     public record ConsumerGroupMember(String consumerId, String clientId, String host, List<ConsumerPosition> assignment) {
-        public ConsumerGroupMember(MemberDescription member, KafkaConsumerMetadata metadata) {
+        public ConsumerGroupMember(MemberDescription member, KafkaConsumerMetadata metadata, TopicPartitionOffsets offsets) {
             this(member.consumerId(),
                  member.clientId(),
                  member.host(),
                  member.assignment()
                        .topicPartitions()
                        .stream()
-                       .map(partition -> new ConsumerPosition(partition, metadata.offset(partition)))
+                       .map(partition -> new ConsumerPosition(partition, offsets.offset(partition), offsets.offset(partition) - metadata.offset(partition)))
                        .toList());
         }
     }
 
-    public record ConsumerGroup(String id, String type, String state, String coordinator,
-                                List<ConsumerGroupMember> members) {
+    public record ConsumerGroup(String id, String type, String state, String coordinator, List<ConsumerGroupMember> members) {
 
-        public ConsumerGroup(ConsumerGroupListing group, ConsumerGroupDescription description, KafkaConsumerMetadata metadata) {
+        public ConsumerGroup(ConsumerGroupListing group, ConsumerGroupDescription description, KafkaConsumerMetadata metadata, TopicPartitionOffsets offsets) {
             this(group.groupId(),
                  group.type().map(GroupType::name).orElse(description.type().name()),
                  group.state().map(ConsumerGroupState::name).orElse(description.state().name()),
                  description.coordinator().host(),
-                 description.members().stream().map(m -> new ConsumerGroupMember(m, metadata)).toList());
+                 description.members().stream().map(m -> new ConsumerGroupMember(m, metadata, offsets)).toList());
         }
     }
 
@@ -119,6 +131,23 @@ public class KafkaAdminService {
         }
     }
 
+    private static KafkaResponse<TopicPartitionOffsets, KafkaUnexpectedException> describePartitions(AdminClient client, List<TopicPartition> partitions) {
+        try {
+            return new KafkaResponse<>(new TopicPartitionOffsets(client.listOffsets(partitions.stream()
+                                                                                              .collect(Collectors.toMap(Function.identity(),
+                                                                                                                        v -> OffsetSpec.latest())))
+                                                                       .all()
+                                                                       .get(500, TimeUnit.MILLISECONDS)));
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return null; // this line is never executed!
+        } catch (ExecutionException e) {
+            return new KafkaResponse<>(new KafkaUnexpectedException(e));
+        } catch (TimeoutException e) {
+            return new KafkaResponse<>(new KafkaUnavailableException("Could not connecto with Kafka Brokers!", e));
+        }
+    }
+
     private static KafkaResponse<Map<String, ConsumerGroupDescription>, KafkaUnexpectedException> describeConsumerGroups(AdminClient client,
                                                                                                                          List<String> groupIds) {
         try {
@@ -135,7 +164,6 @@ public class KafkaAdminService {
 
     private static KafkaResponse<Collection<ConsumerGroupListing>, KafkaUnexpectedException> listConsumersInternal(AdminClient client) {
         try {
-            // client.describeConsumerGroups()
             return new KafkaResponse<>(client.listConsumerGroups()
                                              .all()
                                              .get(500, TimeUnit.MILLISECONDS));
@@ -289,13 +317,26 @@ public class KafkaAdminService {
                                                                                .toList()))
                                      .get()
                                      .getOrThrow();
+            var partitionsOffsets = client.map(c -> describePartitions(c,
+                                                                       descriptions.entrySet()
+                                                                                   .stream()
+                                                                                   .map(Entry::getValue)
+                                                                                   .flatMap(d -> d.members()
+                                                                                                  .stream())
+                                                                                   .flatMap(m -> m.assignment()
+                                                                                                  .topicPartitions()
+                                                                                                  .stream())
+                                                                                   .distinct()
+                                                                                   .toList()))
+                                          .get()
+                                          .getOrThrow();
             var metadata = client.map(c -> getConsumerGroupOffsets(c, groups.stream()
                                                                             .map(s -> s.groupId())
                                                                             .findFirst()))
                                  .get()
                                  .getOrThrow();
             return groups.stream()
-                         .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId()), metadata))
+                         .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId()), metadata, partitionsOffsets))
                          .toList();
         } else {
             return Collections.emptyList();

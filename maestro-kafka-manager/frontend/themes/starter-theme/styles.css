@@ -10,6 +10,20 @@
     max-width: 250px;
 }
 
+a,
+a:hover {
+    text-decoration: none;
+    color: #0078A3;
+}
+
+.icon.ok {
+    color: #5D9A5B;
+}
+
+.icon.nok {
+    color: #FF474E;
+}
+
 vaadin-text-field,
 vaadin-integer-field {
     width: 100%;
@@ -32,7 +46,9 @@ table.custom-table {
 
 .custom-table tr th {
     font-weight: bold;
-    background-color: #DDDDDD;
+    background-color: #514663;
+    color: #FFFFFF;
+    border-collapse: collapse;
 }
 
 .custom-table tr th,
@@ -43,7 +59,7 @@ table.custom-table {
 }
 
 .custom-table tr.even {
-    background-color: #f2f2f2;
+    background-color: #CCCEE0;
 }
 
 .custom-table td {

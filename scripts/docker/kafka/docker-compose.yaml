@@ -214,6 +214,36 @@ services:
       - ./consumer:/consumer
       - ./security/producer:/kafka-security
     command: /consumer/ConsumeData.java
+  consumer-tls-diff:
+    image: jbangdev/jbang-action
+    container_name: consumer-tls-diff
+    depends_on:
+      - kafka-broker-tls-0
+      - kafka-broker-tls-1
+      - kafka-broker-tls-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices-diff
+      TLS_ENABLED: "true"
+    volumes:
+      - ./consumer:/consumer
+      - ./security/producer:/kafka-security
+    command: /consumer/ConsumeData.java
+  consumer-tls-xxx:
+    image: jbangdev/jbang-action
+    container_name: consumer-tls-xxx
+    depends_on:
+      - kafka-broker-tls-0
+      - kafka-broker-tls-1
+      - kafka-broker-tls-2
+    environment:
+      TOPIC: currence.exchange.prices
+      GROUP_ID: consumer-prices-xxx
+      TLS_ENABLED: "true"
+    volumes:
+      - ./consumer:/consumer
+      - ./security/producer:/kafka-security
+    command: /consumer/ConsumeData.java
   consumer-1:
     image: jbangdev/jbang-action
     container_name: consumer-1

@@ -14,7 +14,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
@@ -26,9 +25,11 @@ import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.HasDynamicTitle;
+import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import dev.vepo.maestro.kafka.manager.MainView;
 import dev.vepo.maestro.kafka.manager.infra.security.Authenticator;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnaccessibleException;
 import dev.vepo.maestro.kafka.manager.model.Cluster;
@@ -103,7 +104,7 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     }
 
     protected void buildDrawer() {
-        var appName = new Span("Maestro");
+        var appName = new RouterLink("Maestro", MainView.class);
 
         appName.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
                               LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD,
