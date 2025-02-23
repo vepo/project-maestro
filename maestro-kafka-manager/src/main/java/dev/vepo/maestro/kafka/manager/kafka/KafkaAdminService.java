@@ -288,14 +288,14 @@ public class KafkaAdminService {
     public List<KafkaTopic> listTopics() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             var topics = client.map(KafkaAdminService::listTopicsInternal)
-                               .get()
+                               .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                .getOrThrow()
                                .stream()
                                .toList();
             var descriptions = client.map(c -> describeTopics(c, topics.stream()
                                                                        .map(TopicListing::name)
                                                                        .toList()))
-                                     .get()
+                                     .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                      .getOrThrow();
             return topics.stream()
                          .map(topic -> new KafkaTopic(topic, descriptions.get(topic.name())))
@@ -308,14 +308,14 @@ public class KafkaAdminService {
     public List<ConsumerGroup> listConsumers() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             var groups = client.map(KafkaAdminService::listConsumersInternal)
-                               .get()
+                               .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                .getOrThrow()
                                .stream()
                                .toList();
             var descriptions = client.map(c -> describeConsumerGroups(c, groups.stream()
                                                                                .map(ConsumerGroupListing::groupId)
                                                                                .toList()))
-                                     .get()
+                                     .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                      .getOrThrow();
             var partitionsOffsets = client.map(c -> describePartitions(c,
                                                                        descriptions.entrySet()
@@ -328,12 +328,12 @@ public class KafkaAdminService {
                                                                                                   .stream())
                                                                                    .distinct()
                                                                                    .toList()))
-                                          .get()
+                                          .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                           .getOrThrow();
             var metadata = client.map(c -> getConsumerGroupOffsets(c, groups.stream()
                                                                             .map(s -> s.groupId())
                                                                             .findFirst()))
-                                 .get()
+                                 .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                                  .getOrThrow();
             return groups.stream()
                          .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId()), metadata, partitionsOffsets))
@@ -346,7 +346,7 @@ public class KafkaAdminService {
     public List<KafkaNode> describeBroker() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             return client.map(KafkaAdminService::describeClusterInternal)
-                         .get()
+                         .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
                          .getOrThrow()
                          .stream()
                          .map(KafkaNode::new)

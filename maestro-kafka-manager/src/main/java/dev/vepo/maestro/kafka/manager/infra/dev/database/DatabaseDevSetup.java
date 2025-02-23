@@ -118,18 +118,14 @@ public class DatabaseDevSetup {
 
     private long uploadFile(LargeObjectManager lobj, Path filePath) throws Exception {
         long oid = lobj.createLO(LargeObjectManager.READ | LargeObjectManager.WRITE);
-        LargeObject obj = lobj.open(oid, LargeObjectManager.WRITE);
-
-        try (InputStream fis = new FileInputStream(filePath.toFile())) {
+        try (var obj = lobj.open(oid, LargeObjectManager.WRITE);
+                var fis = new FileInputStream(filePath.toFile())) {
             byte[] buf = new byte[2048];
             int bytesRead;
             while ((bytesRead = fis.read(buf)) > 0) {
                 obj.write(buf, 0, bytesRead);
             }
         }
-
-        obj.close();
         return oid;
-
     }
 }
