@@ -285,17 +285,21 @@ public class KafkaAdminService {
                                 });
     }
 
+    private <V> KafkaResponse<V, KafkaUnexpectedException> notAvailableClient() {
+        return new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!"));
+    }
+
     public List<KafkaTopic> listTopics() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             var topics = client.map(KafkaAdminService::listTopicsInternal)
-                               .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                               .orElseGet(this::notAvailableClient)
                                .getOrThrow()
                                .stream()
                                .toList();
             var descriptions = client.map(c -> describeTopics(c, topics.stream()
                                                                        .map(TopicListing::name)
                                                                        .toList()))
-                                     .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                                     .orElseGet(this::notAvailableClient)
                                      .getOrThrow();
             return topics.stream()
                          .map(topic -> new KafkaTopic(topic, descriptions.get(topic.name())))
@@ -308,14 +312,14 @@ public class KafkaAdminService {
     public List<ConsumerGroup> listConsumers() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             var groups = client.map(KafkaAdminService::listConsumersInternal)
-                               .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                               .orElseGet(this::notAvailableClient)
                                .getOrThrow()
                                .stream()
                                .toList();
             var descriptions = client.map(c -> describeConsumerGroups(c, groups.stream()
                                                                                .map(ConsumerGroupListing::groupId)
                                                                                .toList()))
-                                     .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                                     .orElseGet(this::notAvailableClient)
                                      .getOrThrow();
             var partitionsOffsets = client.map(c -> describePartitions(c,
                                                                        descriptions.entrySet()
@@ -328,12 +332,12 @@ public class KafkaAdminService {
                                                                                                   .stream())
                                                                                    .distinct()
                                                                                    .toList()))
-                                          .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                                          .orElseGet(this::notAvailableClient)
                                           .getOrThrow();
             var metadata = client.map(c -> getConsumerGroupOffsets(c, groups.stream()
                                                                             .map(s -> s.groupId())
                                                                             .findFirst()))
-                                 .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                                 .orElseGet(this::notAvailableClient)
                                  .getOrThrow();
             return groups.stream()
                          .map(group -> new ConsumerGroup(group, descriptions.get(group.groupId()), metadata, partitionsOffsets))
@@ -346,7 +350,7 @@ public class KafkaAdminService {
     public List<KafkaNode> describeBroker() throws KafkaUnexpectedException {
         if (client.isPresent()) {
             return client.map(KafkaAdminService::describeClusterInternal)
-                         .orElseGet(() -> new KafkaResponse<>(new KafkaUnexpectedException("Kafka Client not available!")))
+                         .orElseGet(this::notAvailableClient)
                          .getOrThrow()
                          .stream()
                          .map(KafkaNode::new)

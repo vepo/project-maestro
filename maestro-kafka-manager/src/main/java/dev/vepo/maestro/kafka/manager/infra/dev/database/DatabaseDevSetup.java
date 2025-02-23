@@ -1,17 +1,18 @@
 package dev.vepo.maestro.kafka.manager.infra.dev.database;
 
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 
 import javax.sql.DataSource;
 
-import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.resource.spi.IllegalStateException;
-import jakarta.transaction.SystemException;
 
 @ApplicationScoped
 @IfBuildProfile("dev")
@@ -31,15 +31,15 @@ public class DatabaseDevSetup {
     @Inject
     private DataSource dataSource;
 
-    void onStart(@Observes StartupEvent ev) throws IllegalStateException, SecurityException, SystemException {
+    void onStart(@Observes StartupEvent ev) throws IllegalStateException {
         logger.info("Running database initialization for development environment...");
         insertSslCredentials();
     }
 
-    private void insertSslCredentials() throws IllegalStateException, SecurityException, SystemException {
+    private void insertSslCredentials() throws IllegalStateException {
         try (Connection conn = dataSource.getConnection()) {
             conn.setAutoCommit(false);
-            LargeObjectManager lobj = conn.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
+            var lobj = conn.unwrap(org.postgresql.PGConnection.class).getLargeObjectAPI();
 
             // Load truststore and keystore
             long truststoreOid = uploadFile(lobj, Paths.get("../scripts/docker/kafka/security/producer/kafka.producer.truststore.jks"));
@@ -78,14 +78,18 @@ public class DatabaseDevSetup {
             insertCluster(conn, "Cluster Plain", "kafka-0:9092, kafka-1:9094, kafka-2:9096", null, "PLAINTEXT");
 
             // Insert Admin User
-            insertUser(conn, "admin", "admin@maestro.dev", "$2a$10$JQjLXQ.PBxeqfl2XiF/Voe2x33E4SpI4ln5qF2FzR1HojEQho5ilC", "ADMIN");
+            insertUser(conn, "admin", "admin@maestro.dev", "a.PBxeqfl2XiF/Voe2x33E4SpI4ln5qF2FzR1HojEQho5ilC", "ADMIN");
             conn.commit();
-        } catch (Exception e) {
+        } catch (SQLException e) {
             logger.error("Failed to insert SSL credentials", e);
+        } catch (FileNotFoundException fnfe) {
+            logger.error("Could not find TLS files! Please execute './scripts/generate-security-keys.sh'", fnfe);
+        } catch(IOException ioe) {
+            logger.error("Error reading files", ioe);
         }
     }
 
-    private static void insertCluster(Connection conn, String name, String bootstrapServers, Long sslCredentialId, String protocol) throws Exception {
+    private static void insertCluster(Connection conn, String name, String bootstrapServers, Long sslCredentialId, String protocol) throws SQLException {
         String sql =
                 "INSERT INTO tbl_clusters (name, bootstrap_servers, access_ssl_credentials_id, protocol, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -103,7 +107,7 @@ public class DatabaseDevSetup {
         }
     }
 
-    private static void insertUser(Connection conn, String username, String email, String passwordHash, String role) throws Exception {
+    private static void insertUser(Connection conn, String username, String email, String passwordHash, String role) throws SQLException {
         String sql = "INSERT INTO tbl_users (username, email, password, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
@@ -116,7 +120,7 @@ public class DatabaseDevSetup {
         }
     }
 
-    private long uploadFile(LargeObjectManager lobj, Path filePath) throws Exception {
+    private long uploadFile(LargeObjectManager lobj, Path filePath) throws SQLException, FileNotFoundException, IOException {
         long oid = lobj.createLO(LargeObjectManager.READ | LargeObjectManager.WRITE);
         try (var obj = lobj.open(oid, LargeObjectManager.WRITE);
                 var fis = new FileInputStream(filePath.toFile())) {
