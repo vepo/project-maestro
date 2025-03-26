@@ -16,6 +16,8 @@ a:hover {
     color: #0078A3;
 }
 
+/* https://coolors.co/f2f2f2-ffffff-0078a3-14281d-ff7075 */ 
+
 .icon.ok {
     color: #5D9A5B;
 }
@@ -73,4 +75,23 @@ table.custom-table {
 
 vaadin-button {
     cursor: pointer;
+}
+
+div.breadcrumb a,
+div.breadcrumb h2 {
+    display: inline-block;
+    color: #0078A3;
+    font-weight: 600;
+    font-size: 20px;
+}
+
+div.breadcrumb a {
+    color: #707070;
+    /* font-style: italic; */
+    margin-right: 0.5rem;
+}
+
+div.breadcrumb a::after {
+    content: "\000BB";
+    margin-left: 0.5em;
 }

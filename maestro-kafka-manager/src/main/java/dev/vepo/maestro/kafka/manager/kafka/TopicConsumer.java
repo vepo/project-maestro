@@ -13,10 +13,12 @@ import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.config.SslConfigs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import dev.vepo.maestro.kafka.manager.model.Cluster;
+import dev.vepo.maestro.kafka.manager.model.SslCredentials;
 
 public class TopicConsumer implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger(TopicConsumer.class);
@@ -64,6 +66,41 @@ public class TopicConsumer implements AutoCloseable {
                 var configs = new Properties();
                 configs.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, cluster.getBootstrapServers());
                 configs.put(ConsumerConfig.GROUP_ID_CONFIG, "consumer-group-" + topicName + "-" + System.currentTimeMillis());
+                switch (cluster.getProtocol()) {
+                    case PLAINTEXT:
+                        configs.put("security.protocol", "PLAINTEXT");
+                        break;
+                    case SSL:
+                        configs.put("security.protocol", "SSL");
+                        SslCredentials accessSslCredentials = cluster.getAccessSslCredentials();
+                        if (Objects.nonNull(accessSslCredentials)) {
+                            accessSslCredentials.getTemporaryTruststore()
+                                                .ifPresent(file -> {
+                                                    configs.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
+                                                                file.getAbsolutePath());
+                                                });
+                            if (Objects.nonNull(accessSslCredentials.getTruststorePassword())) {
+                                configs.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
+                                            accessSslCredentials.getKeystorePassword());
+                            }
+                            accessSslCredentials.getTemporaryKeystore()
+                                                .ifPresent(file -> {
+                                                    configs.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
+                                                                file.getAbsolutePath());
+                                                });
+                            if (Objects.nonNull(accessSslCredentials.getKeystorePassword())) {
+                                configs.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
+                                            accessSslCredentials.getKeystorePassword());
+                            }
+
+                            if (Objects.nonNull(accessSslCredentials.getKeyPassword())) {
+                                configs.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,
+                                            accessSslCredentials.getKeyPassword());
+                            }
+                        }
+                    default:
+                        break;
+                }
                 configs.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keySerializer);
                 configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueSerializer);
                 configs.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

@@ -13,14 +13,13 @@ import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Header;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.router.AfterNavigationEvent;
 import com.vaadin.flow.router.AfterNavigationObserver;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -29,12 +28,13 @@ import com.vaadin.flow.router.HasDynamicTitle;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 
-import io.quarkus.security.identity.SecurityIdentity;
 import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.security.Authenticator;
 import dev.vepo.maestro.kafka.manager.kafka.exceptions.KafkaUnaccessibleException;
 import dev.vepo.maestro.kafka.manager.model.Cluster;
 import dev.vepo.maestro.kafka.manager.model.ClusterRepository;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
@@ -56,7 +56,7 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     @Inject
     Authenticator authenticator;
 
-    private H2 viewTitle;
+    private Breadcrumb breadcrumb;
 
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
@@ -69,10 +69,13 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
               .ifPresent(clusterSelector::select);
     }
 
+    protected PageParent[] getParents() {
+        return new PageParent[] {};
+    }
+
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
-
-        viewTitle.setText(getTitle());
+        breadcrumb.setup(getTitle(), getParents());
         menu.updateSelectedCluster(clusterSelector.getSelected());
         try {
             setContent(buildContent());
@@ -140,10 +143,10 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
         var toggle = new DrawerToggle();
         toggle.setAriaLabel("Menu toggle");
         toggle.setTooltipText("Menu toggle");
-        viewTitle = new H2();
-        viewTitle.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE,
-                                LumoUtility.Flex.GROW);
-        var header = new Header(toggle, viewTitle);
+        breadcrumb = new Breadcrumb();
+        breadcrumb.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE,
+                                 LumoUtility.Flex.GROW);
+        var header = new Header(toggle, breadcrumb);
         header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
                              LumoUtility.Padding.End.MEDIUM, LumoUtility.Width.FULL);
 

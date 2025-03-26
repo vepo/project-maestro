@@ -26,7 +26,8 @@ public class MainView extends MaestroScreen {
 
     @Override
     protected String getTitle() {
-        return "Maestro";
+        return maybeCluster().map(cluster -> String.format("Cluster \"%s\"", cluster.getName()))
+                             .orElse("Maestro");
     }
 
     @Override

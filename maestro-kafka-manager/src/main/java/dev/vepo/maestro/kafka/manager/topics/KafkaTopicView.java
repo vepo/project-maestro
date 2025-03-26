@@ -1,5 +1,7 @@
 package dev.vepo.maestro.kafka.manager.topics;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +13,10 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 
+import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.TopicTable;
 import dev.vepo.maestro.kafka.manager.infra.controls.dialogs.CreateTopicDialog;
@@ -38,8 +43,16 @@ public class KafkaTopicView extends MaestroScreen {
 
     @Override
     protected String getTitle() {
-        return maybeCluster().map(c -> String.format("Topics %s", c.getName()))
-                             .orElse("Topics");
+        return "Topics";
+    }
+
+    @Override
+    protected PageParent[] getParents() {
+        var cluster = maybeCluster().orElseThrow(() -> new IllegalStateException("Cluster not selected!!!"));
+        return new PageParent[] {
+            new PageParent(String.format("Cluster \"%s\"", cluster.getName()),
+                           MainView.class,
+                           RouteParameters.empty()) };
     }
 
     @Override
