@@ -40,7 +40,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver, Co
 
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        loginForm.setAction("login");
         loginForm.addLoginListener(this);
 
         add(new H1("Maestro"), new Div("Control you Kafka Clusters."), loginForm);

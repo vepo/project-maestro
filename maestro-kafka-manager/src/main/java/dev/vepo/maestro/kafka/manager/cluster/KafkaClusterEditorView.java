@@ -1,8 +1,6 @@
 package dev.vepo.maestro.kafka.manager.cluster;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -24,73 +22,19 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.Command;
 
 import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.cluster.management.KafkaCluster;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
-import dev.vepo.maestro.kafka.manager.infra.controls.html.EntityTable;
-import dev.vepo.maestro.kafka.manager.infra.security.Roles;
 import dev.vepo.maestro.kafka.manager.model.Cluster;
-import dev.vepo.maestro.kafka.manager.model.ClusterRepository;
 import dev.vepo.maestro.kafka.manager.model.Protocol;
 import dev.vepo.maestro.kafka.manager.model.SslCredentials;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.inject.Inject;
 
-@RolesAllowed(Roles.ADMIN)
-@Route("kafka")
+
 public class KafkaClusterEditorView extends MaestroScreen {
-    private class KafkaCluster {
-        private Optional<Long> id;
-        private String name;
-        private String bootstrapServers;
-        private Protocol protocol;
-
-        public KafkaCluster(Cluster cluster) {
-            this(cluster.getId(), cluster.getName(), cluster.getBootstrapServers(), cluster.getProtocol());
-        }
-
-        private KafkaCluster() {
-            id = Optional.empty();
-        }
-
-        private KafkaCluster(Long id, String name, String bootstrapServers, Protocol protocol) {
-            this.id = Optional.of(id);
-            this.name = name;
-            this.bootstrapServers = bootstrapServers;
-            this.protocol = protocol;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getBootstrapServers() {
-            return bootstrapServers;
-        }
-
-        public void setBootstrapServers(String bootstrapServers) {
-            this.bootstrapServers = bootstrapServers;
-        }
-
-        public Protocol getProtocol() {
-            return protocol;
-        }
-
-        public void setProtocol(Protocol protocol) {
-            this.protocol = protocol;
-        }
-
-        public Optional<Long> getId() {
-            return id;
-        }
-    }
+   
 
     private class SslAccessCredentialsForm extends Div {
         private final FormLayout form;
@@ -165,10 +109,10 @@ public class KafkaClusterEditorView extends MaestroScreen {
             var txtId = new TextField();
             txtId.setEnabled(false);
             txtId.setReadOnly(true);
-            binder.forField(txtId)
-                  .bind(cluster -> cluster.getId().map(Object::toString).orElse(""),
-                        (cluster, id) -> cluster.id = id != null && !id.isBlank() ? Optional.of(Long.parseLong(id))
-                                                                                  : Optional.empty());
+            // binder.forField(txtId)
+            //       .bind(cluster -> cluster.getId().map(Object::toString).orElse(""),
+            //             (cluster, id) -> cluster.id = id != null && !id.isBlank() ? Optional.of(Long.parseLong(id))
+            //                                                                       : Optional.empty());
             form.addFormItem(txtId, "ID");
 
             var txtName = new TextField();
@@ -233,7 +177,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                         break;
 
                 }
-                clusterRepository.create(entity);
+                // clusterRepository.create(entity);
                 showGrid();
             });
 
@@ -245,7 +189,7 @@ public class KafkaClusterEditorView extends MaestroScreen {
                     LOGGER.error("Error saving cluster", e);
                     return;
                 }
-                clusterRepository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));
+                // clusterRepository.update(new Cluster(bean.getId().get(), bean.getName(), bean.getBootstrapServers()));
                 showGrid();
             });
             updateButton.setVisible(false);
@@ -280,59 +224,22 @@ public class KafkaClusterEditorView extends MaestroScreen {
         }
     }
 
-    private class GridView extends VerticalLayout {
-        private final EntityTable<KafkaCluster> table;
+    // private class GridView extends VerticalLayout {
+    //     private final EntityTable<KafkaCluster> table;
 
-        private GridView() {
-            table = new EntityTable<>(loadClusters());
-            table.addColumn("Cluster #")
-                 .withValue(cluster -> Long.toString(cluster.getId().orElse(0l)))
-                 .build()
-                 .addColumn("Name")
-                 .withValue(KafkaCluster::getName)
-                 .build()
-                 .addColumn("Bootstrap Servers")
-                 .withValue(KafkaCluster::getBootstrapServers)
-                 .build()
-                 .addColumn("Protocol")
-                 .withValue(c -> c.getProtocol().name())
-                 .build()
-                 .addColumn("Actions")
-                 .withComponent(cluster -> {
-                     var editButton = new Button("Edit", event -> showForm(cluster));
-                     var deleteButton = new Button("Delete", event -> {
-                         clusterRepository.delete(cluster.id.get());
-                         table.update(loadClusters());
-                     });
-                     return new HorizontalLayout(editButton, deleteButton);
-                 })
-                 .build()
-                 .bind();
-            add(createActionButton(), table);
-        }
+    //     private GridView() {
+         
+    //     }
 
-        public void reloadItems() {
-            table.update(loadClusters());
-        }
-
-        private Component createActionButton() {
-            var layout = new HorizontalLayout();
-            layout.add(new Button("New Cluster", event -> showForm(new KafkaCluster())));
-            return layout;
-        }
-    }
+    //     public void reloadItems() {
+    //         table.update(loadClusters());
+    //     }
+    // }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaClusterEditorView.class.getName());
 
-    private GridView gridView;
+    // private GridView gridView;
     private EditorForm formView;
-    private ClusterRepository clusterRepository;
-
-    @Inject
-    public KafkaClusterEditorView(ClusterRepository clusterRepository) {
-        this.clusterRepository = clusterRepository;
-
-    }
 
     @Override
     protected String getTitle() {
@@ -347,25 +254,19 @@ public class KafkaClusterEditorView extends MaestroScreen {
 
     @Override
     protected Component buildContent() {
-        formView = new EditorForm();
-        gridView = new GridView();
-        return new Div(formView, gridView);
-    }
-
-    private List<KafkaCluster> loadClusters() {
-        return clusterRepository.findAll()
-                                .stream()
-                                .map(cluster -> new KafkaCluster(cluster)).toList();
+        return new EditorForm();
+        // gridView = new GridView();
+        // return new Div(formView, gridView);
     }
 
     private void showGrid() {
-        gridView.setVisible(true);
-        gridView.reloadItems();
+        // gridView.setVisible(true);
+        // gridView.reloadItems();
         formView.setVisible(false);
     }
 
     private void showForm(KafkaCluster cluster) {
-        gridView.setVisible(false);
+        // gridView.setVisible(false);
         formView.setVisible(true);
         formView.setItem(cluster);
         formView.focus();
