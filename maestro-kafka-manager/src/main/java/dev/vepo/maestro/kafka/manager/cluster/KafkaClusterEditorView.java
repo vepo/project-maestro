@@ -27,6 +27,8 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.Command;
 
+import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
 import dev.vepo.maestro.kafka.manager.infra.controls.html.EntityTable;
 import dev.vepo.maestro.kafka.manager.infra.security.Roles;
@@ -334,7 +336,13 @@ public class KafkaClusterEditorView extends MaestroScreen {
 
     @Override
     protected String getTitle() {
-        return "Kafka Cluster Editor";
+        return "Clusters";
+    }
+
+    @Override
+    protected PageParent[] getParents() {
+        return new PageParent[] {
+            MainView.page(this) };
     }
 
     @Override

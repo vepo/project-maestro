@@ -6,9 +6,11 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
+import dev.vepo.maestro.kafka.manager.MainView;
 import dev.vepo.maestro.kafka.manager.access.model.User;
 import dev.vepo.maestro.kafka.manager.access.model.UserRepository;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.html.EntityTable;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -27,6 +29,13 @@ public class UsersView extends MaestroScreen {
     @Override
     protected String getTitle() {
         return "Users";
+    }
+
+    @Override
+    protected PageParent[] getParents() {
+        return new PageParent[] {
+            MainView.page(this)
+        };
     }
 
     @Override

@@ -76,7 +76,6 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         breadcrumb.setup(getTitle(), getParents());
-        menu.updateSelectedCluster(clusterSelector.getSelected());
         try {
             setContent(buildContent());
         } catch (KafkaUnaccessibleException ke) {
@@ -103,27 +102,15 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
     protected void setup() {
         setPrimarySection(Section.DRAWER);
         buildNavbar();
-        menu = new MaestroMenu(identity.getRoles());
+        menu = new MaestroMenu(identity.getRoles(), clusterRepository.findAll());
         buildDrawer();
     }
 
     protected void buildDrawer() {
         var appName = new RouterLink("Maestro", MainView.class);
-
-        appName.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
-                              LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD,
+        appName.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX, LumoUtility.FontSize.LARGE, LumoUtility.FontWeight.SEMIBOLD,
                               LumoUtility.Height.XLARGE, LumoUtility.Padding.Horizontal.MEDIUM);
-        var clusterSwitch = new ClusterSwitch(clusterSelector.getSelected(),
-                                              clusterRepository.findAll(),
-                                              cluster -> {
-                                                  clusterSelector.select(cluster.getId());
-                                                  menu.updateSelectedCluster(Optional.of(cluster.getId()));
-                                                  setContent(buildContent());
-                                              });
-        addToDrawer(appName,
-                    new VerticalLayout(clusterSwitch),
-                    menu,
-                    new VerticalLayout(new Button("Logout", e -> authenticator.logout())));
+        addToDrawer(appName, menu, new VerticalLayout(new Button("Logout", e -> authenticator.logout())));
 
     }
 
@@ -131,7 +118,7 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
         return Optional.ofNullable(routeParameters.get(name));
     }
 
-    protected Optional<Cluster> maybeCluster() {
+    public Optional<Cluster> maybeCluster() {
         return clusterSelector.getSelectedCluster();
     }
 
@@ -144,12 +131,9 @@ public abstract class MaestroScreen extends AppLayout implements AfterNavigation
         toggle.setAriaLabel("Menu toggle");
         toggle.setTooltipText("Menu toggle");
         breadcrumb = new Breadcrumb();
-        breadcrumb.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE,
-                                 LumoUtility.Flex.GROW);
+        breadcrumb.addClassNames(LumoUtility.FontSize.LARGE, LumoUtility.Margin.NONE, LumoUtility.Flex.GROW);
         var header = new Header(toggle, breadcrumb);
-        header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX,
-                             LumoUtility.Padding.End.MEDIUM, LumoUtility.Width.FULL);
-
+        header.addClassNames(LumoUtility.AlignItems.CENTER, LumoUtility.Display.FLEX, LumoUtility.Padding.End.MEDIUM, LumoUtility.Width.FULL);
         addToNavbar(false, header);
 
     }

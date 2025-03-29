@@ -1,7 +1,6 @@
 package dev.vepo.maestro.kafka.manager.topics;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -17,15 +16,14 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.BeforeLeaveEvent;
 import com.vaadin.flow.router.BeforeLeaveObserver;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteParameters;
 
-import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.cluster.KafkaClusterStatus;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
 import dev.vepo.maestro.kafka.manager.infra.security.Roles;
 import dev.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
 import dev.vepo.maestro.kafka.manager.kafka.TopicConsumer;
-import dev.vepo.maestro.kafka.manager.model.Cluster;
 import jakarta.annotation.security.RolesAllowed;
 
 @RolesAllowed({
@@ -70,14 +68,10 @@ public class ListenKafkaTopicView extends MaestroScreen implements BeforeLeaveOb
 
     @Override
     protected PageParent[] getParents() {
-        var cluster = maybeCluster().orElseThrow(() -> new IllegalStateException("Cluster not selected!!!"));
         return new PageParent[] {
-            new PageParent(String.format("Cluster \"%s\"", cluster.getName()),
-                           MainView.class,
-                           RouteParameters.empty()),
-            new PageParent("Topics",
-                           KafkaTopicView.class,
-                           new RouteParameters(Map.of("clusterId", cluster.getId().toString()))) };
+            MainView.page(this),
+            KafkaClusterStatus.page(this),
+            KafkaTopicView.page(this) };
     }
 
     @Override

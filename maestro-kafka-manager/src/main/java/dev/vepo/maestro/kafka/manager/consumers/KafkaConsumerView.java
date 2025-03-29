@@ -8,6 +8,9 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
+import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.cluster.KafkaClusterStatus;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.ConsumerGroupTable;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
 import dev.vepo.maestro.kafka.manager.infra.security.Roles;
@@ -32,8 +35,14 @@ public class KafkaConsumerView extends MaestroScreen {
 
     @Override
     protected String getTitle() {
-        return maybeCluster().map(c -> String.format("Consumers %s", c.getName()))
-                             .orElse("Consumers");
+        return "Consumers";
+    }
+
+    @Override
+    protected PageParent[] getParents() {
+        return new PageParent[] {
+            MainView.page(this),
+            KafkaClusterStatus.page(this) };
     }
 
     @Override

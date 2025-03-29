@@ -16,6 +16,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteParameters;
 
 import dev.vepo.maestro.kafka.manager.MainView;
+import dev.vepo.maestro.kafka.manager.cluster.KafkaClusterStatus;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.TopicTable;
@@ -34,6 +35,13 @@ import jakarta.inject.Inject;
 public class KafkaTopicView extends MaestroScreen {
     private static final Logger logger = LoggerFactory.getLogger(KafkaTopicView.class);
 
+    public static PageParent page(MaestroScreen currentPage) {
+        return currentPage.maybeCluster().map(cluster -> new PageParent("Topics",
+                                                                        KafkaTopicView.class,
+                                                                        new RouteParameters(Map.of("clusterId", cluster.getId().toString()))))
+                          .orElseThrow(() -> new IllegalStateException("Cluster not selected!!!"));
+    }
+
     private KafkaAdminService adminService;
 
     @Inject
@@ -48,11 +56,9 @@ public class KafkaTopicView extends MaestroScreen {
 
     @Override
     protected PageParent[] getParents() {
-        var cluster = maybeCluster().orElseThrow(() -> new IllegalStateException("Cluster not selected!!!"));
         return new PageParent[] {
-            new PageParent(String.format("Cluster \"%s\"", cluster.getName()),
-                           MainView.class,
-                           RouteParameters.empty()) };
+            MainView.page(this),
+            KafkaClusterStatus.page(this), };
     }
 
     @Override

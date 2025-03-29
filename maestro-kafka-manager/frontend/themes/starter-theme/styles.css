@@ -95,3 +95,8 @@ div.breadcrumb a::after {
     content: "\000BB";
     margin-left: 0.5em;
 }
+
+.side-nav-item-suffix {
+    margin-left: auto;
+    margin-right: 1px;
+}

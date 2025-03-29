@@ -9,7 +9,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
 
+import dev.vepo.maestro.kafka.manager.MainView;
 import dev.vepo.maestro.kafka.manager.infra.controls.components.MaestroScreen;
+import dev.vepo.maestro.kafka.manager.infra.controls.components.Breadcrumb.PageParent;
 import dev.vepo.maestro.kafka.manager.infra.controls.html.EntityTable;
 import dev.vepo.maestro.kafka.manager.infra.security.Roles;
 import dev.vepo.maestro.kafka.manager.kafka.KafkaAdminService;
@@ -22,22 +24,29 @@ import jakarta.inject.Inject;
     Roles.USER,
     Roles.ADMIN })
 @PreserveOnRefresh
-@Route("kafka/:clusterId([1-9][0-9]*)")
-public class KafkaClusterView extends MaestroScreen {
+@Route("kafka/:clusterId([1-9][0-9]*)/info")
+public class KafkaClusterInfo extends MaestroScreen {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaClusterView.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaClusterInfo.class);
 
     private KafkaAdminService adminService;
 
     @Inject
-    public KafkaClusterView(KafkaAdminService adminService) {
+    public KafkaClusterInfo(KafkaAdminService adminService) {
         this.adminService = adminService;
     }
 
     @Override
     protected String getTitle() {
-        return maybeCluster().map(c -> String.format("Cluster %s", c.getName()))
-                             .orElse("Cluster");
+        return "Information";
+    }
+
+    @Override
+    protected PageParent[] getParents() {
+        return new PageParent[] {
+            MainView.page(this),
+            KafkaClusterStatus.page(this)
+        };
     }
 
     @Override
